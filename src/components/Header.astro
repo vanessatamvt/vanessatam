@@ -1,0 +1,116 @@
+---
+// Top nav, laid out left / center / right. On the homepage the left slot
+// shows the Gallery/Index view toggle; on any sub-page it's a back link
+// instead (mirrors the PRB reference site's header, which swaps context the
+// same way) — "All Projects" back to the gallery from a project page, "Home"
+// back from a one-off page like Photography. The center slot only shows
+// "Vanessa Tam" off the homepage — the homepage already states her name as
+// the big identity heading right below the header, so repeating it there
+// would be redundant; sub-pages have no such heading (their h1 is the page's
+// own title), so the header is what keeps the portfolio's owner identified.
+interface Props {
+  variant?: 'home' | 'project';
+  backLabel?: string;
+  backHref?: string;
+}
+const { variant = 'home', backLabel = 'All Projects', backHref = '/' } = Astro.props;
+---
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <div class="site-header__left">
+      {
+        variant === 'home' ? (
+          <nav class="view-toggle" aria-label="Gallery view">
+            <button type="button" class="view-toggle__btn" data-view-btn="gallery" aria-pressed="true">
+              Gallery
+            </button>
+            <span aria-hidden="true">/</span>
+            <button type="button" class="view-toggle__btn" data-view-btn="index" aria-pressed="false">
+              Index
+            </button>
+          </nav>
+        ) : (
+          <a href={backHref} class="back-link">
+            <span aria-hidden="true">&larr;</span> {backLabel}
+          </a>
+        )
+      }
+    </div>
+
+    <div class="site-header__center">
+      {variant === 'project' && (
+        <a href="/" class="site-header__name">Vanessa Tam</a>
+      )}
+    </div>
+
+    <button type="button" id="menu-toggle" class="menu-btn site-header__right">Menu</button>
+  </div>
+  <hr class="hairline" />
+</header>
+
+<style>
+  .site-header__inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+  }
+
+  .site-header__left {
+    justify-self: start;
+  }
+
+  .site-header__center {
+    justify-self: center;
+  }
+
+  .site-header__right {
+    justify-self: end;
+  }
+
+  .site-header__name {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: var(--text-base);
+  }
+
+  .view-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
+
+  .view-toggle__btn[aria-pressed='true'] {
+    color: var(--color-ink);
+  }
+
+  .view-toggle__btn {
+    color: var(--color-muted);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .view-toggle__btn:hover {
+    color: var(--color-ink);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .back-link:hover {
+    color: var(--color-ink);
+  }
+
+  .menu-btn {
+    font-size: var(--text-sm);
+  }
+</style>

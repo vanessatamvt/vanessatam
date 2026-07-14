@@ -1,0 +1,132 @@
+---
+// Renders one "beat" of a project's story — see the `sections` schema
+// comment in content.config.ts for the full shape. This turns a flat list of
+// photos back into a cohesively composed page: related images sit side by
+// side at equal height, and explanatory paragraphs sit directly below the
+// image(s) they explain.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface SectionImage {
+  src: ImageMetadata;
+  caption?: string;
+}
+interface Props {
+  images?: SectionImage[];
+  sharedCaption?: string;
+  text?: string;
+}
+const { images = [], sharedCaption, text } = Astro.props;
+const sizesFor = (count: number) => `(min-width: 48rem) ${Math.round(100 / count)}vw, 100vw`;
+// Equal-height, no-crop side-by-side rows: each figure's flex-grow is set to
+// its image's aspect ratio (w/h) with a flex-basis of 0, so figure widths
+// come out exactly proportional to aspect ratio. Each image is width:100%
+// height:auto inside its figure, so its rendered height = figureWidth / ar =
+// a constant that's identical for every image in the row — no fixed-height
+// box and no object-fit cropping needed. The images just naturally line up.
+const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
+---
+
+<section class="project-section">
+  <div class="container">
+    {images.length === 0 && text && <p class="project-section__text">{text}</p>}
+
+    {
+      images.length === 1 && (
+        <figure class="project-section__figure">
+          <Image
+            src={images[0].src}
+            alt={images[0].caption ?? ''}
+            widths={[640, 1024, 1600]}
+            sizes="100vw"
+            loading="lazy"
+            decoding="async"
+          />
+          {images[0].caption && <figcaption>{images[0].caption}</figcaption>}
+        </figure>
+      )
+    }
+
+    {
+      images.length >= 2 && (
+        <>
+          <div class="project-section__row">
+            {images.map((img) => (
+              <figure class="project-section__figure project-section__figure--row" style={{ '--ar': aspectRatio(img) }}>
+                <Image
+                  src={img.src}
+                  alt={img.caption ?? sharedCaption ?? ''}
+                  widths={[400, 800, 1200]}
+                  sizes={sizesFor(images.length)}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {!sharedCaption && img.caption && <figcaption>{img.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
+          {sharedCaption && <p class="project-section__shared-caption">{sharedCaption}</p>}
+        </>
+      )
+    }
+
+    {images.length > 0 && text && <p class="project-section__text">{text}</p>}
+  </div>
+</section>
+
+<style>
+  .project-section {
+    padding-block: var(--space-8);
+  }
+
+  /* Side-by-side row: equal image heights via the aspect-ratio flex trick
+     (see component script). align-items:flex-start keeps captions of
+     different lengths from stretching their images. */
+  .project-section__row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+
+  .project-section__figure--row {
+    flex: var(--ar, 1) 1 0%;
+    min-width: 0;
+  }
+
+  /* Full natural size, never cropped — images fill their figure width and
+     keep their own aspect ratio. */
+  .project-section__figure img {
+    width: 100%;
+    height: auto;
+  }
+
+  .project-section__figure figcaption,
+  .project-section__shared-caption {
+    padding-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    /* Captions read as text, so cap their width even under wide images. */
+    max-width: 46rem;
+  }
+
+  /* Paragraphs stay at a comfortable reading measure rather than stretching
+     to the full image width. */
+  .project-section__text {
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    color: var(--color-ink);
+    max-width: 46rem;
+    padding-top: var(--space-4);
+  }
+
+  /* On narrow screens the row stacks; each image returns to its natural
+     full-width block so nothing is squeezed. */
+  @media (max-width: 40rem) {
+    .project-section__row {
+      flex-direction: column;
+    }
+    .project-section__figure--row {
+      flex: none;
+    }
+  }
+</style>

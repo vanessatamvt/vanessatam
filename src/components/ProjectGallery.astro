@@ -1,0 +1,108 @@
+---
+// Horizontal-scroll project rail — the homepage's primary navigation,
+// replicating the PRB reference site's Flickity carousel with plain CSS
+// scroll-snap + a little vanilla JS for click-and-drag scrolling, no
+// carousel library needed.
+import ProjectCard from './ProjectCard.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+}
+const { projects } = Astro.props;
+---
+
+<div class="project-gallery" data-view-panel="gallery">
+  <div class="project-gallery__rail" data-gallery-rail tabindex="0" aria-label="Project gallery, scroll horizontally">
+    {projects.map((project) => <ProjectCard project={project} />)}
+  </div>
+</div>
+
+<style>
+  .project-gallery__rail {
+    display: flex;
+    gap: var(--space-8);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-inline: var(--container-padding);
+    /* Without this, scroll-snap in Chromium snaps the first card's start
+       edge to the scrollport edge *ignoring* the rail's own inline padding —
+       so the page loads pre-scrolled past the left gutter, and the first
+       card looks flush against the browser edge instead of inset. Matching
+       scroll-padding-inline to the visual padding fixes the snap target. */
+    scroll-padding-inline: var(--container-padding);
+    padding-block: var(--space-8);
+    cursor: grab;
+    scrollbar-width: none;
+  }
+
+  .project-gallery__rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-gallery__rail.is-dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+</style>
+
+<script>
+  function bindGallery() {
+    const rail = document.querySelector<HTMLElement>('[data-gallery-rail]');
+    if (!rail) return;
+
+    // Horizontal navigation relies on native trackpad swipe and the
+    // click-and-drag handler below — deliberately NOT hijacking the mouse
+    // wheel here, since converting vertical wheel to horizontal scroll traps
+    // the page (you'd have to scroll through all cards before the page
+    // could continue past the gallery).
+    // A real drag is only recognized after the pointer moves past a small
+    // threshold. Capturing the pointer (and entering "dragging" state)
+    // immediately on pointerdown — with no threshold — silently swallows
+    // ordinary clicks on the project links inside each card, since pointer
+    // capture reroutes the events a click is synthesized from.
+    const DRAG_THRESHOLD = 6;
+    let isDown = false;
+    let dragging = false;
+    let startX = 0;
+    let startScroll = 0;
+
+    rail.addEventListener('pointerdown', (e) => {
+      isDown = true;
+      dragging = false;
+      startX = e.clientX;
+      startScroll = rail.scrollLeft;
+    });
+    rail.addEventListener('pointermove', (e) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      if (!dragging && Math.abs(dx) > DRAG_THRESHOLD) {
+        dragging = true;
+        rail.classList.add('is-dragging');
+        rail.setPointerCapture(e.pointerId);
+      }
+      if (dragging) {
+        rail.scrollLeft = startScroll - dx;
+      }
+    });
+    const stopDrag = () => {
+      isDown = false;
+      rail.classList.remove('is-dragging');
+      // A drag that just ended still fires a trailing click on whatever's
+      // under the pointer — suppress that one click so it can't accidentally
+      // navigate, without affecting genuine taps/clicks.
+      if (dragging) {
+        const suppressNextClick = (e: MouseEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        rail.addEventListener('click', suppressNextClick, { capture: true, once: true });
+      }
+      dragging = false;
+    };
+    rail.addEventListener('pointerup', stopDrag);
+    rail.addEventListener('pointercancel', stopDrag);
+  }
+
+  document.addEventListener('astro:page-load', bindGallery);
+</script>

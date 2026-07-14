@@ -1,0 +1,79 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectGallery from '../components/ProjectGallery.astro';
+import ProjectIndexList from '../components/ProjectIndexList.astro';
+
+const projects = (await getCollection('projects')).sort((a, b) => a.data.code.localeCompare(b.data.code));
+---
+
+<BaseLayout
+  title="Architectural Designer, Vancouver"
+  description="Vanessa Tam — architectural designer and LEED Green Associate based in Vancouver, BC. Portfolio of professional and academic architecture projects."
+  headerVariant="home"
+>
+  <section class="identity">
+    <div class="container">
+      <h1 class="identity__name">Vanessa Tam</h1>
+      <p class="identity__title">Architectural Designer — RIBA Part 3, LEED Green Associate</p>
+      <p class="identity__location">Vancouver, British Columbia</p>
+    </div>
+  </section>
+
+  <hr class="hairline" />
+
+  <section id="work" aria-label="Project gallery">
+    <ProjectGallery projects={projects} />
+    <ProjectIndexList projects={projects} />
+  </section>
+</BaseLayout>
+
+<style>
+  .identity {
+    padding-block: var(--space-16) var(--space-12);
+  }
+
+  .identity__name {
+    font-size: var(--text-hero);
+    margin-bottom: var(--space-4);
+  }
+
+  .identity__title {
+    font-size: var(--text-lg);
+    color: var(--color-ink);
+    margin-bottom: var(--space-2);
+  }
+
+  .identity__location {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+</style>
+
+<script>
+  function bindViewToggle() {
+    const buttons = document.querySelectorAll<HTMLButtonElement>('[data-view-btn]');
+    const panels = document.querySelectorAll<HTMLElement>('[data-view-panel]');
+    if (!buttons.length || !panels.length) return;
+
+    const setView = (view: string) => {
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.viewPanel !== view;
+      });
+      buttons.forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.viewBtn === view));
+      });
+    };
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => setView(btn.dataset.viewBtn ?? 'gallery'));
+    });
+
+    setView('gallery');
+  }
+
+  document.addEventListener('astro:page-load', bindViewToggle);
+</script>

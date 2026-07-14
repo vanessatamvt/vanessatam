@@ -1,0 +1,71 @@
+---
+// A distinct, accent-colored callout for what Vanessa personally did on a
+// project (her PDF's "Responsibilities" line) — pulled out of the generic
+// FactList so her own contribution reads as the headline it is, not just
+// another row of project trivia.
+interface Props {
+  responsibilities?: string;
+}
+const { responsibilities } = Astro.props;
+const items = (responsibilities ?? '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean);
+---
+
+{
+  items.length > 0 && (
+    <section class="role-highlight">
+      <div class="container">
+        <p class="role-highlight__label">Vanessa's Role</p>
+        <ul class="role-highlight__tags">
+          {items.map((item) => (
+            <li class="role-highlight__tag">{item}</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .role-highlight {
+    padding-block: var(--space-12);
+    border-bottom: var(--hairline-width) solid var(--color-hairline);
+  }
+
+  .role-highlight__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .role-highlight__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+  }
+
+  .role-highlight__tag {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  /* A small square accent-colored divider between items, in place of a
+     comma — no pill/chip shape, no rounded corners, matching the site's
+     square, hairline-based language rather than a UI-widget look. */
+  .role-highlight__tag:not(:last-child)::after {
+    content: '';
+    display: inline-block;
+    width: 0.35em;
+    height: 0.35em;
+    margin-inline: var(--space-4);
+    background: var(--color-accent);
+    vertical-align: middle;
+  }
+</style>

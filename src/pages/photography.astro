@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import ProjectSection from '../components/ProjectSection.astro';
+
+const [photography] = await getCollection('photography');
+const { title, description, sections } = photography.data;
+---
+
+<BaseLayout title={title} description={description} headerVariant="project" backLabel="Home">
+  <article>
+    <section class="photo-hero">
+      <div class="container photo-hero__inner">
+        <div class="photo-hero__label">
+          <SectionLabel text="Photography" />
+        </div>
+        <div class="photo-hero__copy">
+          <h1 class="photo-hero__title">{title}</h1>
+          <p class="photo-hero__description">{description}</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="hairline" />
+
+    <div class="photo-sections">
+      {sections.map((section) => <ProjectSection images={section.images} sharedCaption={section.sharedCaption} />)}
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .photo-hero {
+    padding-block: var(--space-16) var(--space-8);
+  }
+
+  .photo-hero__inner {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: var(--space-4);
+  }
+
+  .photo-hero__title {
+    font-size: var(--text-hero);
+  }
+
+  .photo-hero__description {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    max-width: 40rem;
+    margin-top: var(--space-4);
+  }
+
+  .photo-sections {
+    padding-top: var(--space-8);
+    padding-bottom: var(--space-16);
+  }
+</style>

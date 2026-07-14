@@ -1,0 +1,138 @@
+---
+// Full-screen nav overlay, toggled by the "Menu" button in Header.
+// Kept deliberately small in scope: Home / Work / Photography / Contact,
+// since an About page isn't built yet (see project plan).
+const email = 'vanessatamvt@gmail.com';
+---
+
+<div id="menu-overlay" class="menu-overlay" aria-hidden="true">
+  <div class="container menu-overlay__top">
+    <button type="button" id="menu-close" class="menu-overlay__close">Close</button>
+  </div>
+  <hr class="hairline hairline--dark" />
+
+  <nav class="container menu-overlay__nav">
+    <a href="/" class="menu-overlay__link">
+      <span>Home</span>
+      <span aria-hidden="true">&nearr;</span>
+    </a>
+    <hr class="hairline hairline--dark" />
+    <a href="/#work" class="menu-overlay__link">
+      <span>Work</span>
+      <span aria-hidden="true">&rarr;</span>
+    </a>
+    <hr class="hairline hairline--dark" />
+    <a href="/photography" class="menu-overlay__link">
+      <span>Photography</span>
+      <span aria-hidden="true">&darr;</span>
+    </a>
+    <hr class="hairline hairline--dark" />
+    <a href={`mailto:${email}`} class="menu-overlay__link">
+      <span>Contact</span>
+      <span aria-hidden="true">&searr;</span>
+    </a>
+    <hr class="hairline hairline--dark" />
+  </nav>
+
+  <div class="container menu-overlay__bottom">
+    <!-- Name is intentionally not repeated here — Header already shows it
+         on every page, this overlay just sits on top of it. -->
+    <p class="menu-overlay__tagline">Architecture | Photography</p>
+  </div>
+</div>
+
+<style>
+  .menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--color-dark-bg);
+    color: var(--color-dark-text);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(-100%);
+    transition: transform var(--duration-slow) var(--ease-standard);
+  }
+
+  .menu-overlay.is-open {
+    transform: translateY(0);
+  }
+
+  .menu-overlay__top {
+    display: flex;
+    justify-content: flex-end;
+    padding-block: var(--space-4);
+  }
+
+  .menu-overlay__close {
+    font-size: var(--text-sm);
+  }
+
+  .menu-overlay__nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: var(--space-8);
+  }
+
+  .menu-overlay__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 500;
+    padding-block: var(--space-4);
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .menu-overlay__link:hover {
+    opacity: 0.6;
+  }
+
+  .menu-overlay__bottom {
+    display: flex;
+    justify-content: flex-end;
+    padding-block: var(--space-6);
+  }
+
+  .menu-overlay__tagline {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-dark-muted);
+  }
+</style>
+
+<script>
+  function bindMenu() {
+    const overlay = document.getElementById('menu-overlay');
+    const openBtn = document.getElementById('menu-toggle');
+    const closeBtn = document.getElementById('menu-close');
+    if (!overlay || !openBtn || !closeBtn) return;
+
+    const open = () => {
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    };
+    const close = () => {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    };
+
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.querySelectorAll('a').forEach((link) => link.addEventListener('click', close));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+  }
+
+  // astro:page-load fires on first load AND after every client-side
+  // navigation via <ClientRouter />, so listeners keep working across pages.
+  document.addEventListener('astro:page-load', bindMenu);
+</script>

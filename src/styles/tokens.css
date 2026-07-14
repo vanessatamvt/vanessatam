@@ -1,0 +1,66 @@
+/*
+  Design tokens for the Vanessa Tam portfolio site.
+  Everything visual (color, type, spacing, motion) is defined once here as a
+  CSS custom property. Components should reference these variables rather
+  than hardcoding values, so the whole site's look can be retuned from this
+  one file.
+*/
+
+:root {
+  /* --- Color --------------------------------------------------------- */
+  /* Warm cream/ink palette lifted directly from Vanessa's own PDF portfolio. */
+  --color-bg: #f6f1e4;
+  --color-ink: #1c1a16;
+  --color-muted: #78705f;
+  --color-hairline: #dad2c0;
+  /* Muted terracotta accent — our own pick, same warm family as the PRB
+     reference site but not a copy of it (see project plan for rationale). */
+  --color-accent: #b7502e;
+  --color-accent-hover: #963f22;
+
+  /* Dark contrast sections (fact blocks, footer, menu overlay) reuse ink
+     as background with cream text, mirroring the PRB reference's dark panel. */
+  --color-dark-bg: var(--color-ink);
+  --color-dark-text: var(--color-bg);
+  --color-dark-muted: #a49c8c;
+  --color-dark-hairline: rgba(246, 241, 228, 0.18);
+
+  /* --- Type ------------------------------------------------------------ */
+  --font-heading: var(--font-archivo), 'Helvetica Neue', Arial, sans-serif;
+  --font-body: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  --text-xs: 0.75rem; /* 12px — meta labels, project codes */
+  --text-sm: 0.875rem; /* 14px — captions, nav links */
+  --text-base: 1rem; /* 16px — body copy */
+  --text-lg: 1.25rem; /* 20px — intro paragraphs */
+  --text-xl: 1.75rem; /* 28px — section headings */
+  --text-2xl: 2.5rem; /* 40px — page-level headings */
+  /* Fluid hero headline: scales between ~36px and ~120px with viewport width.
+     Pure vw (no flat rem addition) so it actually shrinks on narrow phones
+     instead of staying oversized and forcing long words to overflow. */
+  --text-hero: clamp(2.25rem, 9vw, 7.5rem);
+
+  /* --- Spacing (4px base unit) ----------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* --- Layout ------------------------------------------------------------ */
+  --container-max: 90rem; /* 1440px */
+  --container-padding: clamp(1.25rem, 4vw, 3rem);
+  --hairline-width: 1px;
+
+  /* --- Motion ------------------------------------------------------------ */
+  --ease-standard: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 200ms;
+  --duration-base: 400ms;
+  --duration-slow: 700ms;
+}

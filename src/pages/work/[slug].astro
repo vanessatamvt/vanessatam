@@ -1,0 +1,192 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import FactList from '../../components/FactList.astro';
+import RoleHighlight from '../../components/RoleHighlight.astro';
+import ProjectSection from '../../components/ProjectSection.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project, allProjects: projects },
+  }));
+}
+
+const { project, allProjects } = Astro.props;
+const { title, location, category, code, tag, description, facts, heroImage, heroCaption, sections } = project.data;
+const { Content } = await render(project);
+
+const related = allProjects
+  .filter((p) => p.id !== project.id)
+  .sort((a, b) => a.data.code.localeCompare(b.data.code))
+  .slice(0, 3);
+---
+
+<BaseLayout title={title} description={description} headerVariant="project">
+  <article>
+    <section class="project-hero">
+      <div class="container project-hero__inner">
+        <div class="project-hero__label">
+          <SectionLabel text={`VT ${code} — ${category}`} />
+        </div>
+        <div class="project-hero__copy">
+          <h1 class="project-hero__title">{title}</h1>
+          <p class="project-hero__location">{location}</p>
+        </div>
+        <span class="project-hero__arrow" aria-hidden="true">&searr;</span>
+      </div>
+    </section>
+
+    <hr class="hairline" />
+
+    <div class="container project-meta">
+      <span class="meta-label">VT {code}</span>
+      <span class="meta-label">{tag}</span>
+    </div>
+
+    <figure class="project-hero__image-wrap">
+      <Image src={heroImage} alt={title} widths={[640, 1024, 1600, 2000]} sizes="100vw" loading="eager" fetchpriority="high" class="project-hero__image" />
+      {heroCaption && <figcaption class="container project-hero__caption">{heroCaption}</figcaption>}
+    </figure>
+
+    <FactList description={description} facts={facts} />
+    <RoleHighlight responsibilities={facts?.responsibilities} />
+
+    {
+      Content && (
+        <div class="container project-body">
+          <Content />
+        </div>
+      )
+    }
+
+    <div class="project-sections">
+      {
+        sections.map((section) => (
+          <ProjectSection
+            images={section.images}
+            sharedCaption={section.sharedCaption}
+            featuredIndex={section.featuredIndex}
+            text={section.text}
+          />
+        ))
+      }
+    </div>
+
+    <section class="related">
+      <hr class="hairline" />
+      <div class="container">
+        <p class="meta-label related__heading">More Projects</p>
+        {
+          related.map((p) => (
+            <>
+              <a href={`/work/${p.id}`} class="related__row">
+                <span class="meta-label related__code">VT {p.data.code}</span>
+                <span class="related__title">{p.data.title}</span>
+                <span aria-hidden="true">&nearr;</span>
+              </a>
+              <hr class="hairline" />
+            </>
+          ))
+        }
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .project-hero {
+    padding-block: var(--space-16) var(--space-8);
+  }
+
+  .project-hero__inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: var(--space-4);
+  }
+
+  .project-hero__title {
+    font-size: var(--text-hero);
+    /* Reserve room on the right for the decorative arrow so long single-line
+       titles (e.g. "Un Po' Più di Boschi") don't crowd into it. */
+    padding-right: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  .project-hero__location {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    margin-top: var(--space-4);
+  }
+
+  .project-hero__arrow {
+    position: absolute;
+    top: 0;
+    right: var(--container-padding);
+    font-size: var(--text-2xl);
+    color: var(--color-accent);
+  }
+
+  .project-meta {
+    display: flex;
+    justify-content: space-between;
+    padding-block: var(--space-3);
+  }
+
+  .project-hero__image {
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    object-fit: cover;
+  }
+
+  .project-hero__caption {
+    padding-block: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
+
+  .project-body {
+    padding-block: var(--space-16);
+    max-width: 46rem;
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .project-sections {
+    padding-bottom: var(--space-16);
+  }
+
+  .related__heading {
+    padding-block: var(--space-6) var(--space-3);
+  }
+
+  .related__row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-6);
+    padding-block: var(--space-4);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .related__row:hover {
+    color: var(--color-accent);
+  }
+
+  .related__code {
+    width: 4.5rem;
+    flex-shrink: 0;
+  }
+
+  .related__title {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    flex: 1;
+  }
+</style>

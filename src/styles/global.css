@@ -1,0 +1,117 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.05;
+  /* Safety net: a single long word (e.g. "Knightsbridge") at hero size can
+     still be wider than a narrow phone viewport even with fluid clamp()
+     sizing — allow it to break rather than overflow the page horizontally. */
+  overflow-wrap: break-word;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Browsers default <figure> to margin: 1em 40px, which silently throws off
+   alignment against the shared .container padding wherever a figure is used
+   (project hero, section images) — reset it so figures only ever get
+   spacing we set explicitly. */
+figure {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Shared layout primitive: constrains content width with responsive gutters.
+   `width: 100%` is explicit (not just implied by block-level width:auto)
+   because `.container` is also used as a direct child of flex containers
+   (e.g. MenuOverlay) — in a flex context, an item's auto inline margins
+   disable cross-axis stretch and shrink-to-fit + center instead, which
+   silently breaks full-width layout. Forcing width:100% sidesteps that. */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+/* Shared hairline rule, used throughout for section/meta dividers. */
+.hairline {
+  border: none;
+  border-top: var(--hairline-width) solid var(--color-hairline);
+  margin: 0;
+}
+
+.hairline--dark {
+  border-top-color: var(--color-dark-hairline);
+}
+
+/* Small caps meta label style, used for project codes / eyebrow text. */
+.meta-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

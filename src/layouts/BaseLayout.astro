@@ -1,0 +1,42 @@
+---
+import { Font } from 'astro:assets';
+import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MenuOverlay from '../components/MenuOverlay.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  headerVariant?: 'home' | 'project';
+  backLabel?: string;
+  backHref?: string;
+}
+const { title, description, headerVariant = 'home', backLabel, backHref } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="description" content={description} />
+    <title>{title} — Vanessa Tam</title>
+
+    <Font cssVariable="--font-archivo" preload />
+    <Font cssVariable="--font-inter" preload />
+    <Font cssVariable="--font-ibm-plex-mono" />
+
+    <ClientRouter />
+  </head>
+  <body>
+    <Header variant={headerVariant} backLabel={backLabel} backHref={backHref} />
+    <main transition:animate="fade">
+      <slot />
+    </main>
+    <Footer />
+    <MenuOverlay />
+  </body>
+</html>

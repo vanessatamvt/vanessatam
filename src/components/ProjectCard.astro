@@ -1,0 +1,115 @@
+---
+import { Image } from 'astro:assets';
+import SectionLabel from './SectionLabel.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { title, tag, code, heroImage } = project.data;
+---
+
+<a href={`/work/${project.id}`} class="project-card" data-project-card>
+  <div class="project-card__row">
+    <div class="project-card__main">
+      <div class="project-card__image-wrap">
+        <Image
+          src={heroImage}
+          alt={title}
+          width={800}
+          height={1000}
+          loading="lazy"
+          class="project-card__image"
+        />
+      </div>
+      <div class="project-card__caption">
+        <span class="project-card__title">{title}</span>
+        <span class="project-card__tag">{tag}</span>
+      </div>
+    </div>
+    <div class="project-card__label">
+      <SectionLabel text={`VT ${code}`} />
+    </div>
+  </div>
+</a>
+
+<style>
+  .project-card {
+    flex: 0 0 auto;
+    width: min(78vw, 30rem);
+    scroll-snap-align: start;
+  }
+
+  /* Label is a sibling of the image+caption column (not the image alone), so
+     it stretches the full height of both — the caption row below only spans
+     the image's own width, instead of bleeding into the label's gutter. */
+  .project-card__row {
+    display: flex;
+  }
+
+  .project-card__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project-card__image-wrap {
+    height: min(60vh, 32rem);
+    overflow: hidden;
+  }
+
+  .project-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--duration-slow) var(--ease-standard);
+  }
+
+  .project-card:hover .project-card__image {
+    transform: scale(1.045);
+  }
+
+  /* Sits beside the image, not on top of it — a plain solid gutter matching
+     the page background, not a gradient overlay cutting across the photo.
+     No divider line against the image/caption here — SectionLabel's usual
+     border-left reads fine as a running rule on the project page, but next
+     to a small card it just looked like a stray line, so it's turned off. */
+  .project-card__label {
+    flex-shrink: 0;
+    width: 2rem;
+    background: var(--color-bg);
+    padding-top: var(--space-3);
+  }
+
+  .project-card__label :global(.section-label) {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  .project-card__caption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding-top: var(--space-3);
+  }
+
+  /* min-width: 0 lets the title shrink/wrap instead of forcing the caption
+     row wider than the image above it — without it, a long tag like
+     "Residential, Mixed-Use" pushed the whole row past the image's edge. */
+  .project-card__title {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 500;
+    min-width: 0;
+  }
+
+  .project-card__tag {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+</style>

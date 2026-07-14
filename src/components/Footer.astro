@@ -1,0 +1,54 @@
+---
+const email = 'vanessatamvt@gmail.com';
+const phone = '+1 (604) 362-3678';
+---
+
+<footer class="site-footer">
+  <hr class="hairline" />
+  <div class="container site-footer__inner">
+    <div class="site-footer__row">
+      <a href={`mailto:${email}`} class="site-footer__link">{email}</a>
+      <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} class="site-footer__link">{phone}</a>
+    </div>
+    <p class="site-footer__tagline">Architecture | Photography</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-32);
+  }
+
+  .site-footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding-block: var(--space-6);
+    font-size: var(--text-sm);
+  }
+
+  .site-footer__row {
+    display: flex;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+  }
+
+  .site-footer__link {
+    color: var(--color-muted);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .site-footer__link:hover {
+    color: var(--color-accent);
+  }
+
+  .site-footer__tagline {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+</style>

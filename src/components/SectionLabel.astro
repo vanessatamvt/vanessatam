@@ -1,0 +1,47 @@
+---
+// Rotated vertical text pinned to a hairline rule. This is the site's
+// signature wayfinding device — it echoes both Vanessa's own PDF portfolio
+// (a rotated "Project 01" tab running down the page margin) and the PRB
+// reference site (a rotated project-code label beside each gallery image).
+// Reused on gallery cards (project code) and project pages (running section tab).
+interface Props {
+  text: string;
+  dark?: boolean;
+  class?: string;
+}
+const { text, dark = false, class: className } = Astro.props;
+---
+
+<div class={`section-label ${dark ? 'section-label--dark' : ''} ${className ?? ''}`}>
+  <span class="section-label__text">{text}</span>
+</div>
+
+<style>
+  .section-label {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    height: 100%;
+    border-left: var(--hairline-width) solid var(--color-hairline);
+    padding-left: var(--space-2);
+  }
+
+  .section-label--dark {
+    border-left-color: var(--color-dark-hairline);
+  }
+
+  .section-label__text {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  .section-label--dark .section-label__text {
+    color: var(--color-dark-muted);
+  }
+</style>

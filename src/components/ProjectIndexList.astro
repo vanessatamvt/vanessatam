@@ -1,0 +1,86 @@
+---
+// Alternate "Index" view to the gallery: same project data, grouped by
+// category into a hairline-divided list — mirrors the PRB reference site's
+// gallery-index page.
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+}
+const { projects } = Astro.props;
+
+const groups: { label: string; items: CollectionEntry<'projects'>[] }[] = [
+  { label: 'Professional Projects', items: projects.filter((p) => p.data.category === 'professional') },
+  { label: 'Academic Projects', items: projects.filter((p) => p.data.category === 'academic') },
+].filter((g) => g.items.length > 0);
+---
+
+<div class="project-index" data-view-panel="index" hidden>
+  <div class="container">
+    {
+      groups.map((group) => (
+        <div class="project-index__group">
+          <p class="project-index__group-label">{group.label}</p>
+          <hr class="hairline" />
+          {group.items.map((project) => (
+            <>
+              <a href={`/work/${project.id}`} class="project-index__row">
+                <span class="project-index__code">VT {project.data.code}</span>
+                <span class="project-index__title">{project.data.title}</span>
+                <span class="project-index__arrow" aria-hidden="true">
+                  &nearr;
+                </span>
+              </a>
+              <hr class="hairline" />
+            </>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .project-index__group {
+    padding-top: var(--space-12);
+  }
+
+  .project-index__group-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    padding-bottom: var(--space-3);
+  }
+
+  .project-index__row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-6);
+    padding-block: var(--space-4);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .project-index__row:hover {
+    color: var(--color-accent);
+  }
+
+  .project-index__code {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    width: 4.5rem;
+    flex-shrink: 0;
+  }
+
+  .project-index__title {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    flex: 1;
+  }
+
+  .project-index__arrow {
+    font-size: var(--text-lg);
+  }
+</style>
