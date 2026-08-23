@@ -25,10 +25,12 @@ facts:
     - "Reviewed shop drawings and issued site instructions per client's requests"
 imageCredit: "Images taken by Vanessa Tam on site visits while employed at RWA Group Architecture"
 heroImage: ./hero.jpg
-# Home-page card crop: shifted right so the entrance bay and right-hand
-# balconies stay in frame instead of the default center crop losing them
-# off the right edge.
-cardPosition: "75% center"
+# Dedicated card crop: heroImage is landscape (16:9), and the card's own
+# cover-crop box is too shallow to zoom into the entrance bay the way a
+# hand-picked crop can — object-position can only shift within that shallow
+# crop, not tighten it. card.jpg is a pre-cropped frame of the entrance
+# bay, balconies either side, and the roofline above.
+cardImage: ./card.jpg
 sections:
   - text: "Site Reviews"
     note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."

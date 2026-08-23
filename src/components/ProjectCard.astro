@@ -7,7 +7,7 @@ interface Props {
   project: CollectionEntry<'projects'>;
 }
 const { project } = Astro.props;
-const { title, tag, code, heroImage, category, cardPosition } = project.data;
+const { title, tag, code, heroImage, cardImage, category, cardPosition } = project.data;
 const categoryLabel = category === 'professional' ? 'Professional' : 'Academic';
 ---
 
@@ -16,7 +16,7 @@ const categoryLabel = category === 'professional' ? 'Professional' : 'Academic';
     <div class="project-card__main">
       <div class="project-card__image-wrap">
         <Image
-          src={heroImage}
+          src={cardImage ?? heroImage}
           alt={title}
           width={1000}
           loading="lazy"

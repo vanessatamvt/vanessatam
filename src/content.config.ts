@@ -46,6 +46,14 @@ const projects = defineCollection({
       // the project page's own hero banner when detailHeroImage is unset.
       heroImage: image(),
       heroCaption: z.string().optional(),
+      // Optional override for the home-page card ONLY — a dedicated crop when
+      // heroImage's own composition (source aspect ratio, subject placement)
+      // doesn't survive the card's cover-crop box well at every viewport size.
+      // cardPosition can't zoom in, only shift within what a cover-crop of
+      // heroImage already shows — a landscape source cropped into a much
+      // taller box may need a tighter, hand-picked frame instead. If unset,
+      // the card falls back to heroImage, same as before.
+      cardImage: image().optional(),
       // ONE attribution line covering the project's firm/developer-supplied
       // imagery (renderings and marketing photography Vanessa didn't produce
       // herself), e.g. "Images Courtesy of RWA Group Architecture". Rendered
