@@ -33,10 +33,11 @@ sections:
       - src: ./rendering-02.jpg
   - text: "Site Reviews"
     note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
-# "Site Photos" carousel — renders below Site Reviews (buildingGallery
-# always follows sections). Orientation left to Astro's default portrait
-# box unless the actual EXIF-corrected dimensions say otherwise.
-galleryTitle: "Site Photos"
+# Carousel of site photos — renders below Site Reviews (buildingGallery
+# always follows sections). No title, and pulled close to the Site
+# Reviews subheading above it rather than reading as its own module.
+galleryTitle: ""
+galleryTight: true
 buildingGallery:
   - src: ./site-photo-01.jpg
   - src: ./site-photo-02.jpg

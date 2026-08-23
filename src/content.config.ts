@@ -104,6 +104,11 @@ const projects = defineCollection({
       // photos). constructionGallery is unaffected: it always renders last,
       // after sections, as the page's final carousel.
       galleryBeforeSections: z.boolean().optional(),
+      // Shrink the carousel's top padding so it sits close to whatever's
+      // just above it (usually the last story section) instead of reading
+      // as its own separated module. Handy alongside an empty galleryTitle,
+      // where there's no heading to justify the usual breathing room.
+      galleryTight: z.boolean().optional(),
       // Attribution for THIS carousel only, when its photography has a
       // different source from the rest of the project (e.g. the finished-hotel
       // reel shot by other photographers). Rendered as a quiet right-aligned

@@ -28,14 +28,19 @@ interface Props {
   /** Attribution for this reel only, when its photography comes from a
    *  different source than the rest of the project's imagery. */
   credit?: string;
+  /** Pull the carousel closer to whatever precedes it (usually the last
+   *  story section) by shrinking the module's top padding — for a carousel
+   *  that should read as a continuation of what's just above it rather than
+   *  a new, separated module. */
+  tight?: boolean;
 }
-const { images = [], title = 'Explore the Building', landscape = false, mixed = false, credit } = Astro.props;
+const { images = [], title = 'Explore the Building', landscape = false, mixed = false, credit, tight = false } = Astro.props;
 ---
 
 {
   images.length > 0 && (
-    <section class:list={['building-gallery', { 'building-gallery--landscape': landscape, 'building-gallery--mixed': mixed }]} data-building-gallery>
-      <h2 class="building-gallery__title">{title}</h2>
+    <section class:list={['building-gallery', { 'building-gallery--landscape': landscape, 'building-gallery--mixed': mixed, 'building-gallery--tight': tight }]} data-building-gallery>
+      {title && <h2 class="building-gallery__title">{title}</h2>}
 
       <div class="building-gallery__viewport">
         <ul class="building-gallery__track" data-bg-track>
@@ -92,6 +97,10 @@ const { images = [], title = 'Explore the Building', landscape = false, mixed = 
 <style>
   .building-gallery {
     padding-block: var(--space-24) var(--space-16);
+  }
+
+  .building-gallery--tight {
+    padding-top: var(--space-4);
   }
 
   /* Centered, wide-tracked heading — the module's anchor, echoing the Hyatt

@@ -36,6 +36,7 @@ const {
   galleryLandscape,
   galleryMixed,
   galleryBeforeSections,
+  galleryTight,
   constructionGallery,
   constructionGalleryTitle,
   constructionGalleryLandscape,
@@ -118,7 +119,7 @@ const heroSizes = heroContain ? `min(100vw, ${pageHeroImage.width}px)` : '100vw'
     {/* galleryBeforeSections is an opt-in per-project override — everyone else
         keeps the default order below (sections, then buildingGallery). */}
     {galleryBeforeSections && buildingGallery.length > 0 && (
-      <BuildingGallery images={buildingGallery} title={galleryTitle} landscape={galleryLandscape} mixed={galleryMixed} credit={galleryCredit} />
+      <BuildingGallery images={buildingGallery} title={galleryTitle} landscape={galleryLandscape} mixed={galleryMixed} credit={galleryCredit} tight={galleryTight} />
     )}
 
     <div class="project-sections">
@@ -150,7 +151,7 @@ const heroSizes = heroContain ? `min(100vw, ${pageHeroImage.width}px)` : '100vw'
         facts as before. constructionGallery always renders last, regardless
         of galleryBeforeSections. */}
     {!galleryBeforeSections && buildingGallery.length > 0 && (
-      <BuildingGallery images={buildingGallery} title={galleryTitle} landscape={galleryLandscape} mixed={galleryMixed} credit={galleryCredit} />
+      <BuildingGallery images={buildingGallery} title={galleryTitle} landscape={galleryLandscape} mixed={galleryMixed} credit={galleryCredit} tight={galleryTight} />
     )}
     {constructionGallery.length > 0 && <BuildingGallery images={constructionGallery} title={constructionGalleryTitle} landscape={constructionGalleryLandscape} mixed={constructionGalleryMixed} />}
 
