@@ -5,7 +5,7 @@ category: professional
 code: "02"
 tag: "Vancouver"
 stage: "Construction"
-description: "The final building of a decade-long master-planned community in North Vancouver's Lynn Valley."
+description: "The final building of a decade-long community masterplan in North Vancouver's Lynn Valley."
 facts:
   affiliation: "RWA Group Architecture"
   client: "Mosaic Homes"
@@ -25,6 +25,10 @@ facts:
     - "Reviewed shop drawings and issued site instructions per client's requests"
 imageCredit: "Images taken by Vanessa Tam on site visits while employed at RWA Group Architecture"
 heroImage: ./hero.jpg
+# Home-page card crop: shifted right so the entrance bay and right-hand
+# balconies stay in frame instead of the default center crop losing them
+# off the right edge.
+cardPosition: "75% center"
 sections:
   - text: "Site Reviews"
     note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."

@@ -63,6 +63,11 @@ const projects = defineCollection({
       // "center bottom" to anchor the crop to the image's bottom edge when the
       // meaningful content sits low (street level) and the top is just sky.
       heroPosition: z.string().optional(),
+      // CSS object-position for the home-page card's cropped cover (same
+      // idea as heroPosition, but for ProjectCard's portrait crop). Defaults
+      // to center; set e.g. "75% center" to shift the crop window right when
+      // the subject sits off to one side.
+      cardPosition: z.string().optional(),
       // Show the project-page hero WHOLE instead of cropping it to fill the
       // banner. The default `object-fit: cover` crop suits a photograph with
       // room to lose at the edges, but ruins a drawing or a rendering whose
