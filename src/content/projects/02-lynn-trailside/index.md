@@ -28,4 +28,14 @@ heroImage: ./hero.jpg
 sections:
   - text: "Site Reviews"
     note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
+# "Renderings" showcase gallery — a centered-peek carousel. All four are
+# landscape, so a uniform landscape box applies. Renders below Site Reviews
+# (the page always places buildingGallery after any story sections).
+galleryTitle: "Renderings"
+galleryLandscape: true
+buildingGallery:
+  - src: ./rendering-01.jpg
+  - src: ./rendering-02.jpg
+  - src: ./rendering-03.jpg
+  - src: ./rendering-04.jpg
 ---
