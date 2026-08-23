@@ -21,25 +21,26 @@ heroCaption: "Stepped terraces and shared public realm between the two towers"
 # Closing showcase carousel — photographs of the physical competition model
 # built during the proposal. Rendered at the bottom of the page (after the
 # story sections, before "More Projects"), like every buildingGallery.
-# Mixed orientation: six portrait shots plus one landscape, each sized to its
-# own aspect ratio so nothing gets cropped.
+# Mixed orientation: five landscape draft-model shots plus two portrait
+# final-model shots, each sized to its own aspect ratio so nothing gets
+# cropped.
 galleryTitle: "Inside the Physical Model"
 galleryMixed: true
 buildingGallery:
-  - src: ./model-01-twin-towers.jpg
-    caption: "The two towers and their shared podium, seen across the site base"
-  - src: ./model-02-site-base.jpg
-    caption: "The competition model complete on its site plate"
-  - src: ./model-03-terraces-aerial.jpg
-    caption: "Aerial oblique: the interlacing terraces between the R&D and municipal blocks"
-  - src: ./model-04-stacked-plates.jpg
-    caption: "Elevation through the stacked floor plates and their planted edges"
-  - src: ./model-05-auditorium.jpg
-    caption: "The auditorium and cantilevered communal plates of the \"+Space\""
-  - src: ./model-06-plus-space.jpg
-    caption: "Looking up through the \"+Space\" between the two buildings"
-  - src: ./model-07-cantilevers.jpg
-    caption: "Cantilevered terraces at model scale, with figures for reference"
+  - src: ./draft-01-model.jpg
+    caption: "Draft Model"
+  - src: ./draft-02-model.jpg
+    caption: "Draft Model"
+  - src: ./draft-03-model.jpg
+    caption: "Draft Model"
+  - src: ./draft-04-model.jpg
+    caption: "Draft Model"
+  - src: ./draft-05-model.jpg
+    caption: "Draft Model"
+  - src: ./final-01-model.jpeg
+    caption: "Final Model for Submission"
+  - src: ./final-02-model.jpeg
+    caption: "Final Model for Submission"
 sections:
   # Page 17 — programmatic zoning around the shared podium, paired with the
   # Open Innovation stacked-programme diagram (both whole, uncropped), with

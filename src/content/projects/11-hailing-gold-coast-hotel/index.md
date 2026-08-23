@@ -1,17 +1,20 @@
 ---
 title: "Hailing Gold Coast Hotel"
-location: "China"
+location: "Hailing, China"
 category: professional
 code: "11"
 tag: "China"
-stage: "Design Study"
-# PLACEHOLDER COPY — Vanessa is writing the real description, facts and role
-# into "Project Descriptions.pages"; swap them in here when they're ready.
-# Everything below the frontmatter comment blocks is real (the photographs).
+stage: "Conceptual Proposal"
 description: "A hotel design study developed through successive physical models — from coloured programme massing to the finished presentation model."
 facts:
   affiliation: "RAD Ltd, Hong Kong"
-  responsibilities: "Physical model-building"
+  client: "Nimble Group"
+  projectType: "Family-Friendly Resort"
+  currentStage: "Conceptual Proposal"
+  siteArea: "35,000 sqm"
+  gfa: "38,000 sqm"
+  program: "Hotel rooms and amenities"
+  responsibilities: "Conceptual presentation, Graphical Production, Modelling and Rendering, Physical Model, Owner's Meetings"
 imageCredit: "Images Courtesy of RAD Ltd"
 # Home-page card only — cropped to the tall red-box framing so the tower fills
 # the portrait card instead of being centre-cropped out of a wide photo.
