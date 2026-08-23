@@ -28,6 +28,13 @@ heroImage: ./hero.jpg
 sections:
   - text: "Site Reviews"
     note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
+  # 2x2 grid, captions to follow.
+  - images:
+      - src: ./site-review-01.jpg
+      - src: ./site-review-02.jpg
+  - images:
+      - src: ./site-review-03.jpg
+      - src: ./site-review-04.jpg
 # "Renderings" showcase gallery — a centered-peek carousel. All four are
 # landscape, so a uniform landscape box applies. Renders below Site Reviews
 # (the page always places buildingGallery after any story sections).
@@ -38,4 +45,17 @@ buildingGallery:
   - src: ./rendering-02.jpg
   - src: ./rendering-03.jpg
   - src: ./rendering-04.jpg
+# "Building Envelope Review" — second closing carousel, rendered after
+# Renderings (buildingGallery then constructionGallery, always at the
+# bottom of the page).
+constructionGalleryTitle: "Building Envelope Review"
+constructionGallery:
+  - src: ./envelope-01.jpg
+  - src: ./envelope-02.jpg
+  - src: ./envelope-03.jpg
+  - src: ./envelope-04.jpg
+  - src: ./envelope-05.jpg
+  - src: ./envelope-06.jpg
+  - src: ./envelope-07.jpg
+  - src: ./envelope-08.jpg
 ---
