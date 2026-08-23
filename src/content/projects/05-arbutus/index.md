@@ -24,9 +24,10 @@ heroImage: ./hero.jpg
 # Project-page banner only (home page card keeps heroImage). Construction
 # photo with the building's verticals straightened to align with the frame.
 detailHeroImage: ./detail-hero.jpg
-# "Explore the Building" showcase gallery — a centered-peek carousel of
-# construction-progress photos. To reorder, rearrange these lines; to add
+# "Exterior Cladding Inspection" showcase gallery — a centered-peek carousel
+# of construction-progress photos. To reorder, rearrange these lines; to add
 # more, drop a JPG in this folder and add another `- src:` entry.
+galleryTitle: "Exterior Cladding Inspection"
 buildingGallery:
   - src: ./showcase-01.jpg # facade + balconies, gravel foreground
   - src: ./showcase-02.jpg # Q-decked bridge between the two buildings
@@ -38,10 +39,15 @@ buildingGallery:
 constructionGalleryTitle: "Pre-Occupancy"
 constructionGallery:
   - src: ./pre-occupancy-01.jpg
+    caption: "Privacy screens to be installed against the exterior wall"
   - src: ./pre-occupancy-02.jpg
+    caption: 'Max. 4" gap between guardrail and exterior siding'
   - src: ./pre-occupancy-03.jpg
+    caption: "A view up on the South Building's NE facade"
   - src: ./pre-occupancy-04.jpg
+    caption: "Soffit longboards installation under the bridge"
   - src: ./pre-occupancy-05.jpg
+    caption: "Concreting of landscape planters on Level 1"
 # Site Reviews: CA site-review deficiency photos, 2 per row, aligned to the
 # container margins.
 sections:
