@@ -32,9 +32,22 @@ buildingGallery:
   - src: ./showcase-02.jpg # Q-decked bridge between the two buildings
   - src: ./showcase-03.jpg # balcony + brick material detail
   - src: ./showcase-04.jpg # street elevation, W 35th Ave
+# Pre-Occupancy: site walkthrough photos shortly before occupancy, Aug 2026.
+# All five are portrait, so the default portrait slide box applies (matches
+# buildingGallery above — no orientation flag needed).
+constructionGalleryTitle: "Pre-Occupancy"
+constructionGallery:
+  - src: ./pre-occupancy-01.jpg
+  - src: ./pre-occupancy-02.jpg
+  - src: ./pre-occupancy-03.jpg
+  - src: ./pre-occupancy-04.jpg
+  - src: ./pre-occupancy-05.jpg
 # Site Reviews: CA site-review deficiency photos, 2 per row, aligned to the
 # container margins.
 sections:
+  - images:
+      - src: ./rendering-01.jpg
+      - src: ./rendering-02.jpg
   - text: "Site Reviews"
     note: "All site items shown were photos taken at the time of review.\nAll deficiencies have been rectified in accordance to relevant building codes and regulations."
   - images:
