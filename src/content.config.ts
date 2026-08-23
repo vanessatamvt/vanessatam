@@ -81,10 +81,16 @@ const projects = defineCollection({
       // A standalone "Explore the Building" showcase gallery — a centered-peek
       // carousel of finished-building photos (portrait), modelled on the
       // "Explore Our Hotel" module on Hyatt property pages. Rendered by
-      // <BuildingGallery /> ABOVE the story `sections`. Optional; omit it and
-      // the module simply doesn't appear. `galleryTitle` overrides the default
+      // <BuildingGallery /> below the story `sections` by default (see
+      // `galleryBeforeSections` to flip that). Optional; omit it and the
+      // module simply doesn't appear. `galleryTitle` overrides the default
       // centered heading.
       galleryTitle: z.string().optional(),
+      // Move buildingGallery ABOVE sections instead of below — for a project
+      // whose carousel should lead (e.g. renderings before site-review
+      // photos). constructionGallery is unaffected: it always renders last,
+      // after sections, as the page's final carousel.
+      galleryBeforeSections: z.boolean().optional(),
       // Attribution for THIS carousel only, when its photography has a
       // different source from the rest of the project (e.g. the finished-hotel
       // reel shot by other photographers). Rendered as a quiet right-aligned

@@ -28,32 +28,32 @@ heroImage: ./hero.jpg
 sections:
   - text: "Site Reviews"
     note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
-  # 2x2 grid, captions to follow.
+  # 2x2 grid.
   - images:
       - src: ./site-review-01.jpg
+        caption: "Suspended slab formwork and mechanical sleeving in progress"
       - src: ./site-review-02.jpg
+        caption: "L1 suspended slab poured with partial framing in sight"
   - images:
       - src: ./site-review-03.jpg
+        caption: "Patio window and balcony door, soffit and siding mockup review"
       - src: ./site-review-04.jpg
+        caption: "Overall framing up to L4"
 # "Renderings" showcase gallery — a centered-peek carousel. All four are
-# landscape, so a uniform landscape box applies. Renders below Site Reviews
-# (the page always places buildingGallery after any story sections).
+# landscape, so a uniform landscape box applies. galleryBeforeSections
+# moves this ABOVE Site Reviews (renderings lead the page).
 galleryTitle: "Renderings"
 galleryLandscape: true
+galleryBeforeSections: true
 buildingGallery:
   - src: ./rendering-01.jpg
   - src: ./rendering-02.jpg
   - src: ./rendering-03.jpg
   - src: ./rendering-04.jpg
-# "Building Envelope Review" — second closing carousel, rendered after
-# Renderings (buildingGallery then constructionGallery, always at the
-# bottom of the page).
+# "Building Envelope Review" — closing carousel, always rendered last,
+# after Renderings and Site Reviews.
 constructionGalleryTitle: "Building Envelope Review"
 constructionGallery:
-  - src: ./envelope-01.jpg
-  - src: ./envelope-02.jpg
-  - src: ./envelope-03.jpg
-  - src: ./envelope-04.jpg
   - src: ./envelope-05.jpg
   - src: ./envelope-06.jpg
   - src: ./envelope-07.jpg
