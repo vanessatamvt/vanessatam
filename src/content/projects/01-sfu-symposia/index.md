@@ -26,5 +26,7 @@ heroImage: ./hero.jpg
 # Anchor the cropped project-page hero to the image's bottom edge so the
 # street level (shops, trees) stays visible; the extra sky at top is trimmed.
 heroPosition: "center bottom"
-sections: []
+sections:
+  - text: "Site Reviews"
+    note: "All deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
 ---

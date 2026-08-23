@@ -25,5 +25,7 @@ facts:
     - "Reviewed shop drawings and issued site instructions per client's requests"
 imageCredit: "Images taken by Vanessa Tam on site visits while employed at RWA Group Architecture"
 heroImage: ./hero.jpg
-sections: []
+sections:
+  - text: "Site Reviews"
+    note: "All deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
 ---

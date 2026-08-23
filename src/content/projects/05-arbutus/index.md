@@ -49,7 +49,7 @@ sections:
       - src: ./rendering-01.jpg
       - src: ./rendering-02.jpg
   - text: "Site Reviews"
-    note: "All site items shown were photos taken at the time of review.\nAll deficiencies have been rectified in accordance to relevant building codes and regulations."
+    note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
   - images:
       - src: ./site-review-01.jpg
         caption: "Corridor insulation review"
