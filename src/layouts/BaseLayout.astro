@@ -1,6 +1,7 @@
 ---
 import { Font } from 'astro:assets';
 import { ClientRouter } from 'astro:transitions';
+import Analytics from '@vercel/analytics/astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import MenuOverlay from '../components/MenuOverlay.astro';
@@ -51,5 +52,6 @@ const {
     </main>
     <Footer />
     <MenuOverlay />
+    <Analytics />
   </body>
 </html>
