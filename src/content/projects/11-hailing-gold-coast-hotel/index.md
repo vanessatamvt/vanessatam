@@ -48,15 +48,15 @@ buildingGallery:
 # Carousel 2 — the finished presentation model, Nov 2017. Three landscape shots
 # plus one portrait (the overhead site plate), so the slides size to their own
 # aspect ratios rather than a uniform box.
-constructionGalleryTitle: "Finished Model"
+constructionGalleryTitle: "100% Concept Presentation Model"
 constructionGalleryMixed: true
 constructionGallery:
   - src: ./model-01-frontal.jpg
-    caption: "The finished model head-on: the full height of the guestroom slab above its glazed podium"
+    caption: "Front view of the hotel with >80% hotel rooms with sea view"
   - src: ./model-02-three-quarter.jpg
-    caption: "Three-quarter view across the site base, showing the podium spreading into the landscape"
+    caption: "Hotel amenities on the 2-storey podium"
   - src: ./model-03-end-on.jpg
-    caption: "Seen end-on, the slab reads as two thin blades separated by a vertical slot"
+    caption: "Exit stairs and core behind the hotel with open-air single-loaded corridors"
   - src: ./model-04-site-plate.jpg
-    caption: "Overhead: the white building volume set into the cut cardboard site"
+    caption: "Top view of the hotel massing"
 ---
