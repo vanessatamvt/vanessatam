@@ -6,6 +6,7 @@ import SectionLabel from '../../components/SectionLabel.astro';
 import FactList from '../../components/FactList.astro';
 import RoleHighlight from '../../components/RoleHighlight.astro';
 import ProjectSection from '../../components/ProjectSection.astro';
+import BuildingGallery from '../../components/BuildingGallery.astro';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -16,13 +17,69 @@ export async function getStaticPaths() {
 }
 
 const { project, allProjects } = Astro.props;
-const { title, location, category, code, tag, description, facts, heroImage, heroCaption, sections } = project.data;
+const {
+  title,
+  location,
+  category,
+  code,
+  description,
+  facts,
+  heroImage,
+  detailHeroImage,
+  heroPosition,
+  heroContain,
+  imageZoom,
+  sections,
+  buildingGallery,
+  galleryTitle,
+  galleryCredit,
+  galleryLandscape,
+  galleryMixed,
+  constructionGallery,
+  constructionGalleryTitle,
+  constructionGalleryLandscape,
+  constructionGalleryMixed,
+  finaleImage,
+  finaleCaption,
+  imageCredit,
+} = project.data;
 const { Content } = await render(project);
+const hasBody = project.body != null && project.body.trim().length > 0;
+
+// The project page's own banner can show a different, larger photo than the
+// home page card (detailHeroImage) — ProjectCard.astro (the home page card)
+// always uses heroImage directly and is untouched by this. Falls back to
+// heroImage when detailHeroImage isn't set.
+const pageHeroImage = detailHeroImage ?? heroImage;
 
 const related = allProjects
   .filter((p) => p.id !== project.id)
-  .sort((a, b) => a.data.code.localeCompare(b.data.code))
+  .sort((a, b) => {
+    if (a.data.category !== b.data.category) return a.data.category === 'professional' ? -1 : 1;
+    return a.data.code.localeCompare(b.data.code);
+  })
   .slice(0, 3);
+
+// Never ask the image pipeline for a width wider than the source photo has.
+// The hero renders at up to 100vw, so on a wide desktop screen the browser
+// picks the largest srcset entry — if that entry was upscaled past the
+// source's real resolution (some heroes are narrower phone photos, e.g.
+// portrait shots under 2000px wide), the result is a soft/blurry hero even
+// though the original file is fine. Capping the candidates to the source's
+// intrinsic width means the browser's own upscaling is the only one that
+// ever happens, instead of stacking Astro's upscale on top of it.
+const heroWidthCandidates = [640, 1024, 1600, 2000].filter((w) => w <= pageHeroImage.width);
+// The source's own width goes in the set too: without it, a 1666px-wide image
+// tops out at the 1600 candidate and the browser scales that up to fill the
+// banner, which is exactly the softness the cap above exists to prevent. It's
+// capped at 2600 so an oversized source (a 7000px export, say) can't make the
+// pipeline render a 7000px variant nobody will ever see.
+const heroWidths = [
+  ...new Set([...heroWidthCandidates, Math.min(pageHeroImage.width, 2600)]),
+].sort((a, b) => a - b);
+// An uncropped hero is laid out at its own size (capped to the viewport) rather
+// than stretched across it, so the browser never has to upscale it at all.
+const heroSizes = heroContain ? `min(100vw, ${pageHeroImage.width}px)` : '100vw';
 ---
 
 <BaseLayout title={title} description={description} headerVariant="project">
@@ -30,7 +87,7 @@ const related = allProjects
     <section class="project-hero">
       <div class="container project-hero__inner">
         <div class="project-hero__label">
-          <SectionLabel text={`VT ${code} — ${category}`} />
+          <SectionLabel text={`${category === 'professional' ? 'Professional' : 'Academic'} Project ${code}`} />
         </div>
         <div class="project-hero__copy">
           <h1 class="project-hero__title">{title}</h1>
@@ -42,21 +99,15 @@ const related = allProjects
 
     <hr class="hairline" />
 
-    <div class="container project-meta">
-      <span class="meta-label">VT {code}</span>
-      <span class="meta-label">{tag}</span>
-    </div>
-
     <figure class="project-hero__image-wrap">
-      <Image src={heroImage} alt={title} widths={[640, 1024, 1600, 2000]} sizes="100vw" loading="eager" fetchpriority="high" class="project-hero__image" />
-      {heroCaption && <figcaption class="container project-hero__caption">{heroCaption}</figcaption>}
+      <Image src={pageHeroImage} alt={title} widths={heroWidths} sizes={heroSizes} loading="eager" fetchpriority="high" class:list={['project-hero__image', { 'project-hero__image--contain': heroContain }]} style={heroPosition && !heroContain ? `object-position: ${heroPosition};` : undefined} />
     </figure>
 
-    <FactList description={description} facts={facts} />
-    <RoleHighlight responsibilities={facts?.responsibilities} />
+    <FactList description={description} facts={facts} credit={imageCredit} />
+    <RoleHighlight responsibilities={facts?.responsibilities} details={facts?.responsibilityDetails} />
 
     {
-      Content && (
+      hasBody && (
         <div class="container project-body">
           <Content />
         </div>
@@ -69,12 +120,41 @@ const related = allProjects
           <ProjectSection
             images={section.images}
             sharedCaption={section.sharedCaption}
+            zoom={imageZoom === true}
             featuredIndex={section.featuredIndex}
             text={section.text}
+            grid={section.grid}
+            narrow={section.narrow}
+            compact={section.compact}
+            note={section.note}
+            smallText={section.smallText}
+            captionText={section.captionText}
+            video={section.video}
+            videoBanner={section.videoBanner}
+            autoplay={section.autoplay}
           />
         ))
       }
     </div>
+
+    {/* Rendered after the story sections so a project can lead with content
+        (e.g. a video) and close with the showcase carousel. Projects with no
+        sections (e.g. Eastward) are unaffected — the gallery just follows the
+        facts as before. */}
+    {buildingGallery.length > 0 && <BuildingGallery images={buildingGallery} title={galleryTitle} landscape={galleryLandscape} mixed={galleryMixed} credit={galleryCredit} />}
+    {constructionGallery.length > 0 && <BuildingGallery images={constructionGallery} title={constructionGalleryTitle} landscape={constructionGalleryLandscape} mixed={constructionGalleryMixed} />}
+
+    {/* The page's closing shot — deliberately placed after BOTH carousels so it
+        reads as a finale rather than as another item in the reel. Rendered
+        through <ProjectSection /> so it inherits the exact single-image
+        treatment (width, caption style, lightbox) used in the story above. */}
+    {
+      finaleImage && (
+        <div class="project-finale">
+          <ProjectSection images={[{ src: finaleImage, caption: finaleCaption }]} zoom={imageZoom === true} />
+        </div>
+      )
+    }
 
     <section class="related">
       <hr class="hairline" />
@@ -84,7 +164,7 @@ const related = allProjects
           related.map((p) => (
             <>
               <a href={`/work/${p.id}`} class="related__row">
-                <span class="meta-label related__code">VT {p.data.code}</span>
+                <span class="meta-label related__code">PROJECT {p.data.code}</span>
                 <span class="related__title">{p.data.title}</span>
                 <span aria-hidden="true">&nearr;</span>
               </a>
@@ -130,12 +210,6 @@ const related = allProjects
     color: var(--color-accent);
   }
 
-  .project-meta {
-    display: flex;
-    justify-content: space-between;
-    padding-block: var(--space-3);
-  }
-
   .project-hero__image {
     width: 100%;
     height: auto;
@@ -143,15 +217,31 @@ const related = allProjects
     object-fit: cover;
   }
 
+  /* Uncropped hero (heroContain): shown whole, at its own pixel dimensions and
+     centred, capped to the viewport width. Nothing is cropped and nothing is
+     enlarged past the source, so a drawing or masterplan rendering keeps both
+     its full composition and its sharpness. */
+  .project-hero__image--contain {
+    object-fit: contain;
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    margin-inline: auto;
+  }
+
   .project-hero__caption {
     padding-block: var(--space-3);
     font-size: var(--text-sm);
     color: var(--color-muted);
+    text-align: left;
   }
 
   .project-body {
     padding-block: var(--space-16);
-    max-width: 46rem;
+    /* Fluid measure: grows with the window instead of a frozen 46rem. */
+    max-width: var(--text-measure);
     font-size: var(--text-lg);
     line-height: 1.6;
     display: flex;
@@ -161,6 +251,12 @@ const related = allProjects
 
   .project-sections {
     padding-bottom: var(--space-16);
+  }
+
+  /* Breathing room between the last carousel and the closing image, so the
+     finale reads as its own beat rather than trailing the reel. */
+  .project-finale {
+    padding-block: var(--space-16);
   }
 
   .related__heading {

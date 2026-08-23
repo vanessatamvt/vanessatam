@@ -12,12 +12,25 @@ interface Props {
   headerVariant?: 'home' | 'project';
   backLabel?: string;
   backHref?: string;
+  /** 'dark' runs the whole page — header and footer included — on the dark
+   *  brown, with every word in the light beige. Used by the photo-journal
+   *  chapter pages so nothing cream frames the photographs. It sets
+   *  data-theme on <html>, which re-points the colour tokens in tokens.css;
+   *  no component below needs to know about it. */
+  theme?: 'light' | 'dark';
 }
-const { title, description, headerVariant = 'home', backLabel, backHref } = Astro.props;
+const {
+  title,
+  description,
+  headerVariant = 'home',
+  backLabel,
+  backHref,
+  theme = 'light',
+} = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme={theme}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

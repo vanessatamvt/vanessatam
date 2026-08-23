@@ -7,7 +7,8 @@ interface Props {
   project: CollectionEntry<'projects'>;
 }
 const { project } = Astro.props;
-const { title, tag, code, heroImage } = project.data;
+const { title, tag, code, heroImage, category } = project.data;
+const categoryLabel = category === 'professional' ? 'Professional' : 'Academic';
 ---
 
 <a href={`/work/${project.id}`} class="project-card" data-project-card>
@@ -29,7 +30,7 @@ const { title, tag, code, heroImage } = project.data;
       </div>
     </div>
     <div class="project-card__label">
-      <SectionLabel text={`VT ${code}`} />
+      <SectionLabel text={`${categoryLabel} Project ${code}`} />
     </div>
   </div>
 </a>

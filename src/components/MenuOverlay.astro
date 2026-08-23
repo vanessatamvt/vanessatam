@@ -1,7 +1,9 @@
 ---
 // Full-screen nav overlay, toggled by the "Menu" button in Header.
-// Kept deliberately small in scope: Home / Work / Photography / Contact,
-// since an About page isn't built yet (see project plan).
+// About / Work / Photo-Journal / Contact. "Work" IS the home page — the project
+// gallery is the site's landing content, so a separate "Home" entry pointing at
+// the same place was redundant. About leads the menu but is NOT the landing
+// page: visitors still arrive on the gallery at "/".
 const email = 'vanessatamvt@gmail.com';
 ---
 
@@ -12,24 +14,24 @@ const email = 'vanessatamvt@gmail.com';
   <hr class="hairline hairline--dark" />
 
   <nav class="container menu-overlay__nav">
+    <a href="/about" class="menu-overlay__link">
+      <span>About</span>
+      <span aria-hidden="true" class="menu-overlay__arrow menu-overlay__arrow--ne">&nearr;</span>
+    </a>
+    <hr class="hairline hairline--dark" />
     <a href="/" class="menu-overlay__link">
-      <span>Home</span>
-      <span aria-hidden="true">&nearr;</span>
-    </a>
-    <hr class="hairline hairline--dark" />
-    <a href="/#work" class="menu-overlay__link">
       <span>Work</span>
-      <span aria-hidden="true">&rarr;</span>
+      <span aria-hidden="true" class="menu-overlay__arrow menu-overlay__arrow--e">&nearr;</span>
     </a>
     <hr class="hairline hairline--dark" />
-    <a href="/photography" class="menu-overlay__link">
-      <span>Photography</span>
-      <span aria-hidden="true">&darr;</span>
+    <a href="/photo-journal" class="menu-overlay__link">
+      <span>Photo-Journal</span>
+      <span aria-hidden="true" class="menu-overlay__arrow menu-overlay__arrow--s">&nearr;</span>
     </a>
     <hr class="hairline hairline--dark" />
     <a href={`mailto:${email}`} class="menu-overlay__link">
       <span>Contact</span>
-      <span aria-hidden="true">&searr;</span>
+      <span aria-hidden="true" class="menu-overlay__arrow menu-overlay__arrow--se">&nearr;</span>
     </a>
     <hr class="hairline hairline--dark" />
   </nav>
@@ -89,6 +91,26 @@ const email = 'vanessatamvt@gmail.com';
 
   .menu-overlay__link:hover {
     opacity: 0.6;
+  }
+
+  /* One arrow style everywhere — the thin diagonal "&nearr;" glyph — rotated
+     to point in each item's direction, so all four match exactly. The glyph
+     points north-east (up-right) at rest; clockwise rotation aims it:
+     +45° → east, +90° → south-east, +135° → south. */
+  .menu-overlay__arrow {
+    display: inline-block;
+  }
+  .menu-overlay__arrow--ne {
+    transform: rotate(0deg);
+  }
+  .menu-overlay__arrow--e {
+    transform: rotate(45deg);
+  }
+  .menu-overlay__arrow--se {
+    transform: rotate(90deg);
+  }
+  .menu-overlay__arrow--s {
+    transform: rotate(135deg);
   }
 
   .menu-overlay__bottom {

@@ -5,37 +5,63 @@
 // project fact-sheet structure from her PDF portfolio.
 interface Facts {
   affiliation?: string;
+  client?: string;
   projectType?: string;
   currentStage?: string;
   siteArea?: string;
   gfa?: string;
   projectCost?: string;
   program?: string;
+  units?: string;
   responsibilities?: string;
+  fullRead?: string;
 }
 interface Props {
   description: string;
   facts?: Facts;
+  /** One attribution line for the project's firm/developer-supplied imagery
+   *  (e.g. "Images Courtesy of RWA Group Architecture"). Rendered once, quietly,
+   *  at the bottom-right of the fact sheet — right-aligned to the same edge the
+   *  fact rows end on — instead of repeating under every image on the page. */
+  credit?: string;
 }
-const { description, facts } = Astro.props;
+const { description, facts, credit } = Astro.props;
+
+// A fact value that's a URL renders as a clickable link instead of plain text.
+// Link text reads from the destination host (e.g. "View on Behance ↗") so it's
+// friendlier than a raw URL, and stays generic for any future link.
+const isUrl = (v: string) => /^https?:\/\//.test(v);
+const linkLabel = (url: string) => {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '');
+    if (host.includes('behance')) return 'View on Behance ↗';
+    if (host.includes('issuu')) return 'View on Issuu ↗';
+    return 'Read the full project ↗';
+  } catch {
+    return 'Read the full project ↗';
+  }
+};
 
 // Responsibilities is deliberately excluded here — it gets its own
 // highlighted "Vanessa's Role" section (see RoleHighlight.astro) since it's
 // specifically her personal contribution, not a general project fact.
 const rows = [
   ['Affiliation', facts?.affiliation],
+  ['Client', facts?.client],
   ['Project Type', facts?.projectType],
   ['Current Stage', facts?.currentStage],
   ['Site Area', facts?.siteArea],
   ['GFA', facts?.gfa],
   ['Project Cost', facts?.projectCost],
   ['Program', facts?.program],
+  ['No. of Units', facts?.units],
+  ['Full Read', facts?.fullRead],
 ].filter(([, value]) => Boolean(value)) as [string, string][];
 ---
 
 <section class="fact-block">
   <div class="container">
-    <p class="fact-block__intro">{description}</p>
+    <p class="fact-block__intro">{description.split('\n').map((line, i) => (<>{i > 0 && <br />}{line}</>))}</p>
 
     <div class="fact-block__list">
       <hr class="hairline hairline--dark" />
@@ -45,13 +71,23 @@ const rows = [
             <div class="fact-block__row">
               <span class="fact-block__index">{String(i + 1).padStart(2, '0')}</span>
               <span class="fact-block__label">{label}</span>
-              <span class="fact-block__value">{value}</span>
+              <span class="fact-block__value">
+                {isUrl(value) ? (
+                  <a class="fact-block__link" href={value} target="_blank" rel="noopener noreferrer">
+                    {linkLabel(value)}
+                  </a>
+                ) : (
+                  value
+                )}
+              </span>
             </div>
             <hr class="hairline hairline--dark" />
           </>
         ))
       }
     </div>
+
+    {credit && <p class="fact-block__credit">{credit}</p>}
   </div>
 </section>
 
@@ -67,9 +103,10 @@ const rows = [
     font-size: var(--text-xl);
     font-weight: 500;
     line-height: 1.3;
-    max-width: 46rem;
-    /* Indent the first line, echoing the PRB reference page's intro paragraph treatment */
-    text-indent: 2em;
+    /* Stretch to the full container width, matching the fact rows below and
+       the images elsewhere on the page — a capped reading measure here left
+       a large dead gap on the right on wide screens. */
+    max-width: none;
     margin-bottom: var(--space-16);
   }
 
@@ -95,6 +132,29 @@ const rows = [
 
   .fact-block__value {
     font-size: var(--text-base);
+  }
+
+  .fact-block__link {
+    color: var(--color-dark-text);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .fact-block__link:hover {
+    color: var(--color-accent);
+  }
+
+  /* Closes the fact sheet: one quiet attribution line, right-aligned so it
+     finishes flush with the end of the fact rows above it. Deliberately a step
+     below the fact values in size and weight — it's metadata about the page's
+     imagery, not another fact about the project. */
+  .fact-block__credit {
+    margin-top: var(--space-4);
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-dark-muted);
   }
 
   @media (max-width: 40rem) {

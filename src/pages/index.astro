@@ -4,7 +4,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ProjectGallery from '../components/ProjectGallery.astro';
 import ProjectIndexList from '../components/ProjectIndexList.astro';
 
-const projects = (await getCollection('projects')).sort((a, b) => a.data.code.localeCompare(b.data.code));
+// Professional projects first, then academic; each group ordered by its own
+// per-category code (Professional Project 01-10, Academic Project 01-04).
+const projects = (await getCollection('projects')).sort((a, b) => {
+  if (a.data.category !== b.data.category) return a.data.category === 'professional' ? -1 : 1;
+  return a.data.code.localeCompare(b.data.code);
+});
 ---
 
 <BaseLayout
@@ -15,7 +20,7 @@ const projects = (await getCollection('projects')).sort((a, b) => a.data.code.lo
   <section class="identity">
     <div class="container">
       <h1 class="identity__name">Vanessa Tam</h1>
-      <p class="identity__title">Architectural Designer — RIBA Part 3, LEED Green Associate</p>
+      <p class="identity__title">Architectural Designer — Architect, ARB UK</p>
       <p class="identity__location">Vancouver, British Columbia</p>
     </div>
   </section>

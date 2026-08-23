@@ -13,10 +13,16 @@
   --color-ink: #1c1a16;
   --color-muted: #78705f;
   --color-hairline: #dad2c0;
-  /* Muted terracotta accent — our own pick, same warm family as the PRB
-     reference site but not a copy of it (see project plan for rationale). */
-  --color-accent: #b7502e;
-  --color-accent-hover: #963f22;
+  /* Muted terracotta accent — the single non-greyscale colour on the site.
+     Sampled from the square bullet markers in Vanessa's role callout, which is
+     the reference for every accented element: the credential line, link and row
+     hovers, the About page's portrait panel, and the bullets themselves.
+     Nothing else on the site carries colour; the greys are all warm-tinted
+     neutrals (bg, ink, muted, hairline) rather than accents. */
+  --color-accent: #b25133;
+  /* Hover is the same hue stepped darker, so interactive feedback stays
+     readable without introducing a second colour. */
+  --color-accent-hover: #8f3f27;
 
   /* Dark contrast sections (fact blocks, footer, menu overlay) reuse ink
      as background with cream text, mirroring the PRB reference's dark panel. */
@@ -25,6 +31,45 @@
   --color-dark-muted: #a49c8c;
   --color-dark-hairline: rgba(246, 241, 228, 0.18);
 
+  /* --- Dark page theme -------------------------------------------------
+     Opt in with `theme="dark"` on BaseLayout, which sets data-theme on <html>.
+     The photo-journal chapter pages run dark edge to edge, so no beige band
+     frames the photographs at the top or the foot of the page.
+
+     This is deliberately NOT a second set of hexes: it re-points the same core
+     tokens, so the header, the footer, the menu button and anything else built
+     on them follow the theme without knowing it exists.
+
+     Every word is the one light beige — the colour the chapter title is set in.
+     The greys that normally carry hierarchy (muted, the accent) are folded into
+     it on purpose; on a dark page against photographs, the hierarchy is doing
+     its work through size and position instead.
+
+     The dark-* tokens have to be re-stated. They are normally DERIVED from
+     ink/bg (a dark panel on a light page); left to derive here they would
+     invert and turn the menu overlay into a beige sheet. */
+  --color-dark-page: #171614; /* the dark brown the chapter pages sit on */
+  --color-dark-page-text: #f2ede1; /* the light beige every word is set in */
+}
+
+[data-theme='dark'] {
+  --color-bg: var(--color-dark-page);
+  --color-ink: var(--color-dark-page-text);
+  --color-muted: var(--color-dark-page-text);
+  --color-hairline: rgba(242, 237, 225, 0.18);
+  /* The terracotta accent is a warm mark on cream; on the dark brown it reads
+     as a stain rather than an accent, so links resolve to the beige and hover
+     brightens instead of changing hue. */
+  --color-accent: var(--color-dark-page-text);
+  --color-accent-hover: #ffffff;
+
+  --color-dark-bg: var(--color-dark-page);
+  --color-dark-text: var(--color-dark-page-text);
+  --color-dark-muted: var(--color-dark-page-text);
+  --color-dark-hairline: rgba(242, 237, 225, 0.18);
+}
+
+:root {
   /* --- Type ------------------------------------------------------------ */
   --font-heading: var(--font-archivo), 'Helvetica Neue', Arial, sans-serif;
   --font-body: var(--font-inter), 'Helvetica Neue', Arial, sans-serif;
@@ -56,6 +101,10 @@
   /* --- Layout ------------------------------------------------------------ */
   --container-max: 90rem; /* 1440px */
   --container-padding: clamp(1.25rem, 4vw, 3rem);
+  /* Fluid reading measure for paragraphs: tracks the window width (62vw)
+     between a floor of 46rem and a cap of 66rem, so text visibly stretches
+     when the browser is widened but never becomes an unreadably long line. */
+  --text-measure: min(100%, clamp(46rem, 62vw, 66rem));
   --hairline-width: 1px;
 
   /* --- Motion ------------------------------------------------------------ */

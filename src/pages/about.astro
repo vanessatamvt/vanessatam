@@ -1,0 +1,897 @@
+---
+// About — the first item in the menu, ahead of Work. The page is Vanessa's CV;
+// "About" is just the friendlier door into it. Note this is NOT the site's
+// landing page: the project gallery (index.astro) is still what loads at "/",
+// so the menu's first entry and the site's entry point differ on purpose.
+//
+// Layout follows the reference Vanessa supplied: a solid colour block beside a
+// large opening statement, a shorter lead paragraph beneath it, then a run of
+// titled blocks — each one a heading, a line of tiny tracked-out tags, a
+// hairline, and the content below it.
+//
+// The thing that makes this a *portfolio* CV rather than a document: every
+// project named under a role links to its own project page, so a reader can
+// step sideways from the line on the résumé into the drawings behind it.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+
+// The six figures of the "crawling to construction site" drawing, cut from the
+// vector artwork in Vanessa's résumé PDF. Each was cropped to a SHARED
+// baseline, so bottom-aligning them stands everyone on the same ground, and
+// each carries the ratio of its own height to the tallest figure — that's what
+// keeps the baby small and the architect tall instead of scaling them to match.
+const figureModules = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/evolution/*.png',
+  { eager: true },
+);
+const figureSources = Object.entries(figureModules)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([, mod]) => mod.default);
+const tallest = Math.max(...figureSources.map((src) => src.height));
+const figures = figureSources.map((src) => ({ src, ratio: src.height / tallest }));
+
+// Set this to an imported image to replace the colour block in the opening
+// statement with a portrait; setting it back to null restores the flat accent
+// panel. The panel is SQUARE and the photograph is a 2:3 portrait, so the crop
+// is as much of the decision as the photograph — see `object-position` on
+// `.statement__panel img` further down.
+import portraitSrc from '../content/photo-journal/Portrait of me/DSCF3762.JPEG';
+
+const portrait: ImageMetadata | null = portraitSrc;
+
+const email = 'vanessatamvt@gmail.com';
+const phone = '+1 (604) 362-3678';
+const location = 'Vancouver, British Columbia';
+const pdfHref = '/vanessa-tam-cv.pdf';
+
+const statement =
+  'Vanessa is a UK-registered Architect (ARB) and Vancouver-based Project Designer with 5+ years of professional experience spanning Canada, Hong Kong, and Italy.';
+
+const lead =
+  'Holding a Master’s from Politecnico di Milano, she excels in high-density residential developments and strategic urban design interventions. Currently driving multi-unit housing projects at RWA Group, she expertly navigates local building code frameworks, managing permit submissions and on-site inspections with local AHJs.';
+
+const practiceIntro =
+  'Specializing in construction administration from IFC to project occupancy, Vanessa provides top-tier firms with a rare combination of global design perspective, technical precision, and proven project delivery.';
+
+type Entry = {
+  years: string;
+  role: string;
+  org: string;
+  place: string;
+  items?: { text: string; note?: string; href?: string }[];
+};
+
+const experience: Entry[] = [
+  {
+    years: 'Feb 2024 — Present',
+    role: 'Project Designer',
+    org: 'RWA Group Architecture Ltd',
+    place: 'Vancouver, Canada',
+    items: [
+      {
+        text: 'Symposia at SFU — Mosaic Homes',
+        note: '234-unit concrete high-rise and podium with ground-level commercial',
+        href: '/work/01-sfu-symposia',
+      },
+      {
+        text: 'Trailside at Lynn — Mosaic Homes',
+        note: '61 units, wood-frame',
+        href: '/work/02-lynn-trailside',
+      },
+      {
+        text: 'Towns at Lynn — Mosaic Homes',
+        note: '46 townhomes · 2025 ADP Design Award of Excellence',
+        href: '/work/03-lynn-towns',
+      },
+      {
+        text: 'Eastward — Intracorp Homes',
+        note: '136 units, wood-frame; project designer from framing to occupancy',
+        href: '/work/04-eastward',
+      },
+      {
+        text: 'Arbutus — Intracorp Homes',
+        note: 'tender and contract administration',
+        href: '/work/05-arbutus',
+      },
+      { text: 'Large-scale public transit project', note: 'contract administration' },
+    ],
+  },
+  {
+    years: 'Jul 2021 — Mar 2023',
+    role: 'Architectural Assistant',
+    org: 'Ronald Lu & Partners',
+    place: 'Hong Kong',
+    items: [
+      {
+        text: 'The Knightsbridge, Kai Tak',
+        note: 'detail design, contract administration, construction coordination and government submission on a 563-unit concrete high-rise development',
+        href: '/work/06-the-knightsbridge',
+      },
+      {
+        text: 'HKUST campus expansion',
+        note: 'conceptual masterplan for competition',
+        href: '/work/07-sustainable-campus-hkust',
+      },
+      {
+        text: 'Commercial building renovation and change of use',
+        note: 'feasibility study through spatial coordination and building control application',
+      },
+      { text: 'Competition entries and concept design', note: 'institutional masterplan and residential schemes' },
+    ],
+  },
+  {
+    years: '2017 — 2018',
+    role: 'Year-Out Intern',
+    org: 'RAD Ltd',
+    place: 'Hong Kong',
+    items: [
+      {
+        text: 'Luohu and Houhai Nanshan redevelopment',
+        note: 'feasibility to concept design',
+        href: '/work/09-luohu-nanshan-redevelopment',
+      },
+      {
+        text: 'Shenzhen R&D Twin Towers',
+        note: 'invited competition entry',
+        href: '/work/08-rd-twin-towers',
+      },
+      {
+        text: 'CR Chengdu Hotel (Hyatt Mumian)',
+        note: 'spatial coordination to early construction',
+        href: '/work/10-hyatt-mumian-chengdu',
+      },
+      { text: 'Sanya and Goldcoast hotels', note: 'concept and schematic design' },
+    ],
+  },
+  { years: '2015', role: 'Intern', org: 'P&T Architects and Engineers Ltd', place: 'Hong Kong' },
+  { years: '2014', role: 'Intern', org: 'Kohn Pedersen Fox', place: 'Shanghai' },
+  { years: '2014', role: 'Intern', org: 'P&T Architects and Engineers Ltd', place: 'Shanghai' },
+];
+
+const education: Entry[] = [
+  {
+    years: '2018 — 2021',
+    role: 'Master of Science in Architecture and Urban Design',
+    org: 'Politecnico di Milano',
+    place: 'Milan, Italy',
+  },
+  {
+    years: '2013 — 2017',
+    role: 'Bachelor of Social Science in Architectural Design',
+    org: 'The Chinese University of Hong Kong',
+    place: 'Hong Kong',
+  },
+];
+
+const certifications: [string, string, string][] = [
+  ['2026', 'In progress to register as Intern Architect', 'AIBC'],
+  ['2024', 'Architect — Architects Registration Board (ARB), UK', 'Reg. 112155C'],
+  ['2023', 'Advanced Diploma in Professional Practice in Architecture (RIBA Part 3)', 'Royal Institute of British Architects'],
+  ['2023', 'LEED Green Associate', 'Green Business Certification Inc.'],
+  ['2021', 'Autodesk Certified Professional — Revit for BIM', 'Autodesk'],
+  ['2021', 'V-Ray for Revit Professional Certificate', 'Chaos'],
+  ['2020', 'Introductory Certificate in Project Management', 'IPMA'],
+];
+
+const skills: [string, string][] = [
+  [
+    'Software',
+    'Rhinoceros · Grasshopper · Revit · AutoCAD · SketchUp · Enscape · V-Ray · QGIS · Photoshop · Illustrator · InDesign · Lightroom',
+  ],
+  ['Languages', 'English, Cantonese and Chinese — native.\nSpanish, French and Italian — elementary.'],
+];
+
+const extras: { years: string; text: string; note?: string; href?: string }[] = [
+  { years: '2020', text: 'IDEA League Urban Mobility Concept Program', note: 'Smart City Expo, online' },
+  {
+    years: '2019',
+    text: 'International Workshop of Urban and Architectural Design, XII Edition',
+    note: 'Lecco, Italy — the Ver-corso Visconti proposal',
+    href: '/work/a03-ver-corso-visconti',
+  },
+  { years: '2017', text: 'Fun Under the Flyover', note: 'community project, Hong Kong' },
+  { years: '2015', text: 'Sub-divided unit research', note: 'The Chinese University of Hong Kong' },
+  { years: '2015', text: 'Volunteer, Hong Kong Arts Festival', note: 'Silver and Bronze Awardee' },
+];
+---
+
+<BaseLayout
+  title="About"
+  description="Vanessa Tam — UK-registered Architect (ARB) and Vancouver-based Project Designer, with experience spanning Canada, Hong Kong and Italy."
+  headerVariant="project"
+  backLabel="Work"
+  backHref="/"
+>
+  <article>
+    <section class="about-top">
+      <div class="container about-top__inner">
+        <div class="about-top__label">
+          <SectionLabel text="About" />
+        </div>
+        <div class="about-top__copy">
+          <h1 class="about-top__name">Vanessa Tam</h1>
+          <p class="about-top__credential">Architect — ARB, UK</p>
+          <div class="about-top__contact">
+            <a href={`mailto:${email}`}>{email}</a>
+            <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} class="about-top__phone">{phone}</a>
+            <span>{location}</span>
+            <a href={pdfHref} class="about-top__download" download>
+              Download PDF <span aria-hidden="true">&darr;</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Opening statement: a solid accent panel beside the bio's first
+         paragraph, set large. The panel is a placeholder for a portrait —
+         set `portrait` above to an imported image and it swaps in. -->
+    <section class="statement">
+      <div class="container statement__grid">
+        <div class="statement__panel">
+          {portrait ? <Image src={portrait} alt="Vanessa Tam" widths={[480, 900, 1300]} sizes="(min-width: 60rem) 34vw, 90vw" loading="eager" /> : null}
+        </div>
+        <div class="statement__right">
+          <p class="statement__text">{statement}</p>
+
+          <!-- The walk sits in the dead space beside the panel, pushed to the
+               bottom of the column so its dotted ground line lands on the
+               panel's bottom edge. Free scrolling, no snap: it should feel like
+               panning along a wall, not stepping through slides. -->
+          <section class="evolution" aria-label="From crawling to construction site">
+            <div class="evolution__rail" data-evolution-rail tabindex="0">
+              <div class="evolution__strip">
+                {
+                  figures.map((fig) => (
+                    <div class="evolution__figure" style={`--fig-ratio:${fig.ratio}`}>
+                      <Image src={fig.src} alt="" loading="lazy" />
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="container lead">
+      <p class="lead__text">{lead}</p>
+    </section>
+
+    <div class="blocks container">
+      <!-- Education -->
+      <section class="block">
+        <h2 class="block__title">Education</h2>
+        <p class="block__tags">Italy / Hong Kong</p>
+        <hr class="hairline block__rule" />
+        <div class="block__body">
+          {
+            education.map((entry) => (
+              <div class="entry">
+                <div class="entry__when">
+                  <span class="entry__years">{entry.years}</span>
+                  <span class="entry__place">{entry.place}</span>
+                </div>
+                <div class="entry__what">
+                  <h3 class="entry__role entry__role--sm">{entry.role}</h3>
+                  <p class="entry__org">{entry.org}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <p class="blocks__interlude">{practiceIntro}</p>
+
+      <!-- Professional Experience. The entry format is unchanged from before:
+           every project named here links to its own project page. -->
+      <section class="block">
+        <h2 class="block__title">Professional Experience</h2>
+        <p class="block__tags">Vancouver / Hong Kong / Shanghai</p>
+        <hr class="hairline block__rule" />
+        <div class="block__body">
+          {
+            experience.map((entry) => (
+              <div class="entry">
+                <div class="entry__when">
+                  <span class="entry__years">{entry.years}</span>
+                  <span class="entry__place">{entry.place}</span>
+                </div>
+                <div class="entry__what">
+                  <h3 class="entry__role">{entry.role}</h3>
+                  <p class="entry__org">{entry.org}</p>
+                  {entry.items && (
+                    <ul class="items">
+                      {entry.items.map((item) => (
+                        <li class="items__item">
+                          {item.href ? (
+                            <a href={item.href} class="items__link">
+                              {item.text}
+                              <span aria-hidden="true" class="items__arrow">
+                                &nearr;
+                              </span>
+                            </a>
+                          ) : (
+                            <span>{item.text}</span>
+                          )}
+                          {item.note && <span class="items__note">{item.note}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Certifications -->
+      <section class="block">
+        <h2 class="block__title">Certifications</h2>
+        <hr class="hairline block__rule block__rule--no-tags" />
+        <div class="block__body">
+          {
+            certifications.map(([year, name, issuer]) => (
+              <div class="line">
+                <span class="line__key">{year}</span>
+                <span class="line__value">
+                  {name}
+                  <span class="line__note">{issuer}</span>
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Skills -->
+      <section class="block">
+        <h2 class="block__title">Skills</h2>
+        <p class="block__tags">Digital Skills / Languages</p>
+        <hr class="hairline block__rule" />
+        <div class="block__body">
+          {
+            skills.map(([label, value]) => (
+              <div class="line">
+                <span class="line__key">{label}</span>
+                <span class="line__value">
+                  {value.split('\n').map((part, i) => (
+                    <>
+                      {i > 0 && <br />}
+                      {part}
+                    </>
+                  ))}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Extra-Curriculars -->
+      <section class="block">
+        <h2 class="block__title">Extra-Curriculars</h2>
+        <p class="block__tags">Community / Non-Profit / Further Education</p>
+        <hr class="hairline block__rule" />
+        <div class="block__body">
+          {
+            extras.map((item) => (
+              <div class="line">
+                <span class="line__key">{item.years}</span>
+                <span class="line__value">
+                  {item.href ? (
+                    <a href={item.href} class="items__link">
+                      {item.text}
+                      <span aria-hidden="true" class="items__arrow">
+                        &nearr;
+                      </span>
+                    </a>
+                  ) : (
+                    item.text
+                  )}
+                  {item.note && <span class="line__note">{item.note}</span>}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  /* --- Top strip: name, credential, how to reach her --------------------- */
+  .about-top {
+    padding-block: var(--space-16) var(--space-8);
+  }
+
+  .about-top__inner {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: var(--space-4);
+  }
+
+  .about-top__name {
+    font-size: var(--text-2xl);
+  }
+
+  /* The registration is the headline credential, so it sits directly under the
+     name in the accent colour rather than buried in the certifications list. */
+  .about-top__credential {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-top: var(--space-3);
+  }
+
+  .about-top__contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-6);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
+
+  .about-top__contact a {
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .about-top__contact a:hover {
+    color: var(--color-accent);
+  }
+
+  /* Every glyph in a monospace face carries the same advance width, so the two
+     spaces bracketing the area code read as wide gaps. Negative word-spacing
+     tightens exactly those two spaces and nothing else — the hyphen isn't one. */
+  .about-top__phone {
+    word-spacing: -0.28em;
+  }
+
+  .about-top__download {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  /* --- Opening statement ------------------------------------------------- */
+  .statement {
+    padding-block: var(--space-8) var(--space-16);
+  }
+
+  .statement__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.3fr);
+    gap: clamp(var(--space-8), 5vw, var(--space-24));
+    /* stretch, not start: the right column has to match the panel's height so
+       the walk can be pushed to its floor. */
+    align-items: stretch;
+  }
+
+  /* Statement at the top, walk pinned to the bottom — that's what lines the
+     walk's ground line up with the panel's bottom edge. min-width:0 lets the
+     rail shrink inside the grid track so it can actually scroll. */
+  .statement__right {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-8);
+    min-width: 0;
+  }
+
+  /* Square accent panel standing in for a portrait. It keeps its shape whether
+     or not an image is dropped in, so the composition doesn't move later. */
+  .statement__panel {
+    aspect-ratio: 1;
+    background: var(--color-accent);
+    overflow: hidden;
+    /* How far to the right the square is taken from the photograph.
+       A 2:3 frame in a square panel has NO horizontal slack under
+       object-fit: cover — the full width is already showing — so the image is
+       widened by this much and pulled back by the same amount. The face moves
+       roughly a third of this value towards the centre, because widening the
+       image pushes it right again; 15% here lands it ~5% more centred, at the
+       cost of the leftmost ~13% of the hillside. Set to 0 to undo. */
+    --portrait-pan: 0%;
+  }
+
+  .statement__panel :global(img) {
+    width: calc(100% + var(--portrait-pan));
+    /* global.css caps every img at max-width:100%, which would swallow the
+       extra width the pan needs and leave a gap on the right instead. */
+    max-width: none;
+    margin-left: calc(-1 * var(--portrait-pan));
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    /* A square cut from a 2:3 frame only has vertical room to move, and the
+       centre of this one lands on empty hillside. Taking the square from the
+       foot of the frame puts the face in the upper third with the shoulders
+       anchoring the bottom edge. Change the second value to re-frame. */
+    object-position: 50% 100%;
+  }
+
+  .statement__text {
+    font-family: var(--font-heading);
+    font-size: clamp(1.25rem, 2.45vw, 2.15rem);
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  /* --- Lead paragraph ---------------------------------------------------- */
+  .lead {
+    padding-block: var(--space-8) var(--space-16);
+  }
+
+  .lead__text {
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    /* No capped measure: the paragraph runs the full container width, so it
+       re-wraps continuously as the window is dragged wider or narrower and
+       finishes flush with the right margin like everything around it. */
+    max-width: none;
+  }
+
+  /* --- The walk ---------------------------------------------------------- */
+  .evolution {
+    /* No background of its own — the page's cream shows through the drawing's
+       transparent PNGs, so the strip sits ON the site rather than in a box.
+       No padding either: the strip's own bottom edge IS the ground line, and it
+       has to sit flush with the bottom of the accent panel beside it. */
+    padding: 0;
+    /* Makes cqw below resolve against this rail's width rather than the
+       viewport, so the figures are sized by the column they live in. */
+    container-type: inline-size;
+  }
+
+  .evolution__rail {
+    position: relative;
+    overflow-x: auto;
+    /* Deliberately NO scroll-snap: this should pan like a wall, not step
+       between slides. */
+    scrollbar-width: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .evolution__rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .evolution__rail.is-dragging {
+    cursor: grabbing;
+  }
+
+  .evolution__strip {
+    /* Every figure's width works out as --walk-h x (its own pixel width / 760),
+       so the six come to 2.11 x --walk-h laid end to end. At 34cqw with gaps of
+       0.35, four figures and their gaps fill the rail and the fifth is cut in
+       half — the "four and a half figures" before you have to scroll. */
+    --walk-h: 34cqw;
+    --walk-gap: calc(var(--walk-h) * 0.35);
+    display: flex;
+    align-items: flex-end;
+    gap: var(--walk-gap);
+    width: max-content;
+  }
+
+  .evolution__figure {
+    flex: 0 0 auto;
+    position: relative;
+    height: calc(var(--walk-h) * var(--fig-ratio, 1));
+  }
+
+  /* A dotted trace at foot level joining one figure to the next — drawn only
+     across the gaps, not continuously beneath the figures, so it reads as the
+     path walked rather than a floor they're standing on. Each figure paints the
+     segment to its right; the last one has nowhere to walk to. */
+  .evolution__figure:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    width: var(--walk-gap);
+    border-top: 1px dotted rgba(28, 26, 22, 0.45);
+  }
+
+  .evolution__figure :global(img) {
+    height: 100%;
+    width: auto;
+    display: block;
+    -webkit-user-drag: none;
+  }
+
+  /* --- Titled blocks ----------------------------------------------------- */
+  .blocks {
+    padding-bottom: var(--space-16);
+  }
+
+  .block {
+    padding-block: var(--space-12);
+  }
+
+  /* The third bio paragraph, sitting between Education and Professional
+     Experience — spaced like a block but without a heading of its own. */
+  .blocks__interlude {
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    padding-block: var(--space-8) var(--space-4);
+  }
+
+  .block__title {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 500;
+  }
+
+  .block__tags {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    margin-top: var(--space-3);
+  }
+
+  .block__rule {
+    margin-top: var(--space-2);
+  }
+
+  /* Certifications carries no tag line, so its rule needs the breathing room
+     the tags would otherwise have provided. */
+  .block__rule--no-tags {
+    margin-top: var(--space-6);
+  }
+
+  .block__body {
+    padding-top: var(--space-8);
+    max-width: 58rem;
+  }
+
+  /* --- Dated entries (education, experience) ----------------------------- */
+  .entry {
+    display: grid;
+    grid-template-columns: 13rem 1fr;
+    gap: var(--space-6);
+    padding-block: var(--space-6);
+  }
+
+  .entry + .entry {
+    border-top: var(--hairline-width) solid var(--color-hairline);
+  }
+
+  .entry__when {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
+
+  .entry__place {
+    font-size: var(--text-xs);
+  }
+
+  .entry__role {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  /* Degree titles run long — a step down keeps them from reading louder than
+     the job titles in the section above. */
+  .entry__role--sm {
+    font-size: var(--text-base);
+  }
+
+  .entry__org {
+    font-size: var(--text-base);
+    color: var(--color-muted);
+    margin-top: var(--space-2);
+  }
+
+  .items {
+    list-style: none;
+    margin: var(--space-6) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    /* Each project is two lines now, so the gap between them has to be clearly
+       bigger than the gap between a title and its own note. */
+    gap: var(--space-4);
+  }
+
+  /* Every project takes the same two-line shape — title, then its note on the
+     line below — so the titles read as one clean vertical list. The previous
+     flex row only wrapped when it ran out of room, which left short notes
+     inline and long ones dropped, and the ragged mix looked accidental. */
+  .items__item {
+    display: block;
+    font-size: var(--text-base);
+  }
+
+  /* A project named here is a door into its own page, so it gets the same
+     hover-to-accent treatment as the "More Projects" rows. */
+  .items__link {
+    color: var(--color-ink);
+    border-bottom: var(--hairline-width) solid var(--color-hairline);
+    padding-bottom: 0.1em;
+    transition: color var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .items__link:hover {
+    color: var(--color-accent);
+    border-bottom-color: var(--color-accent);
+  }
+
+  .items__arrow {
+    display: inline-block;
+    margin-left: var(--space-1);
+    font-size: 0.85em;
+  }
+
+  .items__note {
+    display: block;
+    padding-top: var(--space-1);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--color-muted);
+    max-width: 46rem;
+  }
+
+  /* --- Simple key/value lines (certifications, skills, extras) ----------- */
+  .line {
+    display: grid;
+    grid-template-columns: 13rem 1fr;
+    gap: var(--space-6);
+    align-items: baseline;
+    padding-block: var(--space-4);
+  }
+
+  .line + .line {
+    border-top: var(--hairline-width) solid var(--color-hairline);
+  }
+
+  .line__key {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
+
+  .line__value {
+    font-size: var(--text-base);
+    line-height: 1.6;
+    /* pre-line keeps deliberate line breaks written into the content (e.g. the
+       two language tiers on their own lines) while still wrapping normally. */
+    white-space: pre-line;
+  }
+
+  .line__note {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    padding-top: var(--space-1);
+  }
+
+  /* --- Print -------------------------------------------------------------
+     Printing this page (or "Save as PDF" from the browser) gives a version
+     typeset in the site's real Archivo/Inter/IBM Plex Mono, which the
+     generated PDF in /public can't be — so it's worth keeping printable.
+     Chrome needs "Background graphics" ticked for the accent panel to show. */
+  @media print {
+    .about-top__download,
+    .evolution {
+      display: none;
+    }
+    /* A URL in the margin is useless on paper, but the project links are the
+       point of this CV — so print where each one goes. */
+    .items__link::after {
+      content: ' (vanessatam.com' attr(href) ')';
+      font-size: 0.75em;
+      color: var(--color-muted);
+    }
+    .items__arrow {
+      display: none;
+    }
+    .block {
+      padding-block: var(--space-6);
+      break-inside: avoid;
+    }
+    .entry,
+    .line {
+      break-inside: avoid;
+    }
+  }
+
+  /* --- Narrow screens ---------------------------------------------------- */
+  @media (max-width: 60rem) {
+    .statement__grid {
+      grid-template-columns: 1fr;
+    }
+    .statement__panel {
+      max-width: 22rem;
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .evolution__strip {
+      /* One-column layout: the rail is full width, so a smaller share of it
+         still shows roughly four and a half figures. */
+      --walk-h: 26cqw;
+    }
+    .entry,
+    .line {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+    .entry__when {
+      flex-direction: row;
+      gap: var(--space-3);
+    }
+  }
+</style>
+
+<script>
+  // Press-and-drag panning for the walk, matching the home gallery and the
+  // project carousels — trackpad swipe already works via native overflow
+  // scrolling, this adds the mouse gesture.
+  function bindEvolution() {
+    const rail = document.querySelector<HTMLElement>('[data-evolution-rail]');
+    if (!rail) return;
+
+    // The figures are <img>, which the browser drags as images by default;
+    // that gesture has to be cancelled or it pre-empts the pan.
+    rail.addEventListener('dragstart', (e) => e.preventDefault());
+
+    const DRAG_THRESHOLD = 6;
+    let isDown = false;
+    let dragging = false;
+    let startX = 0;
+    let startScroll = 0;
+
+    rail.addEventListener('pointerdown', (e) => {
+      isDown = true;
+      dragging = false;
+      startX = e.clientX;
+      startScroll = rail.scrollLeft;
+    });
+    rail.addEventListener('pointermove', (e) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      if (!dragging && Math.abs(dx) > DRAG_THRESHOLD) {
+        dragging = true;
+        rail.classList.add('is-dragging');
+        rail.setPointerCapture(e.pointerId);
+      }
+      if (dragging) rail.scrollLeft = startScroll - dx;
+    });
+    const stopDrag = () => {
+      isDown = false;
+      dragging = false;
+      rail.classList.remove('is-dragging');
+    };
+    rail.addEventListener('pointerup', stopDrag);
+    rail.addEventListener('pointercancel', stopDrag);
+  }
+
+  document.addEventListener('astro:page-load', bindEvolution);
+</script>
+
+
+
+

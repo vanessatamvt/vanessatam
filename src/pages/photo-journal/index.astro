@@ -1,0 +1,870 @@
+---
+// Photo-Journal index — a carousel of places rather than a wall of photographs.
+// One cover per chapter, centred one at a time, each opening that chapter.
+//
+// MECHANISM: a native scroll-snap track. The viewport scrolls horizontally,
+// every card snaps to centre, and the script only ever *reads* the scroll
+// position to work out which card is active. Touch swipe, trackpad and keyboard
+// therefore all work without being written; with JavaScript off the whole thing
+// degrades to a plain scrollable row of covers.
+//
+// SIZING: every card is the same HEIGHT and takes its WIDTH from its own
+// cover's aspect ratio. A landscape cover stays landscape, a portrait one stays
+// portrait, and nothing is ever cropped — which is the whole reason the track
+// is variable-width and the end padding has to be measured rather than guessed.
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { loadChapters } from '../../lib/photo-journal';
+
+const chapters = loadChapters();
+const total = chapters.length;
+const pad = (n: number) => String(n).padStart(2, '0');
+const ratio = (c: (typeof chapters)[number]) =>
+  c.cover ? (c.cover.src.width / c.cover.src.height).toFixed(4) : '1.5';
+---
+
+<BaseLayout
+  title="Photo-Journal"
+  description="Photographs by Vanessa Tam — Iceland, Banff, JFK NY, Japan, Safari, Switzerland, Vancouver and the Yukon, gathered by place."
+  headerVariant="project"
+  backLabel="Work"
+  backHref="/"
+  theme="dark"
+>
+  <article class="journal">
+    <section class="container journal__head">
+      <div class="journal__headrow">
+        <h1 class="journal__title">Photo-Journal</h1>
+        <span class="journal__counter">
+          <span data-carousel-current>01</span> / {pad(total)}
+        </span>
+      </div>
+      <hr class="journal__rule" />
+      <p class="journal__note">Documenting adventures, observations and inspirations.</p>
+    </section>
+
+    <section
+      class="carousel"
+      data-carousel
+      aria-roledescription="carousel"
+      aria-label="Chapters of the photo-journal"
+    >
+      <div class="carousel__viewport" data-carousel-viewport tabindex="0">
+        <ul class="carousel__track" data-carousel-track>
+          {
+            chapters.map((chapter, i) => (
+              <li
+                class="slide"
+                data-slide
+                data-active={i === 0 ? '' : undefined}
+                style={`--tint:${chapter.tint}; --ar:${ratio(chapter)}`}
+                aria-label={`${i + 1} of ${total}`}
+              >
+                <a href={`/photo-journal/${chapter.slug}`} class="slide__link">
+                  <div class="slide__frame">
+                    {chapter.cover && (
+                      <Image
+                        src={chapter.cover.src}
+                        alt=""
+                        widths={[440, 880, 1500]}
+                        sizes="(min-width: 48rem) 62vw, 88vw"
+                        loading="eager"
+                        fetchpriority={i === 0 ? 'high' : 'auto'}
+                        decoding="async"
+                      />
+                    )}
+                  </div>
+                  <div class="slide__label">
+                    <h2 class="slide__name">{chapter.folder}</h2>
+                    <span class="slide__count">{chapter.count} photographs</span>
+                  </div>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <button class="carousel__arrow carousel__arrow--prev" data-carousel-prev aria-label="Previous chapter">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4 7 12l8 8" /></svg>
+      </button>
+      <button class="carousel__arrow carousel__arrow--next" data-carousel-next aria-label="Next chapter">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 4 8 8-8 8" /></svg>
+      </button>
+
+      <ol class="carousel__dots" data-carousel-dots>
+        {
+          chapters.map((chapter, i) => (
+            <li>
+              <button type="button" data-dot data-active={i === 0 ? '' : undefined} aria-label={`Go to ${chapter.folder}`} />
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+  </article>
+</BaseLayout>
+
+<script>
+  // Bound on astro:page-load, NOT at module top level — see the long note in
+  // [chapter].astro. Short version: <ClientRouter /> runs a module script only
+  // once per browser session, so top-level setup wires the first page you land
+  // on and nothing you navigate to afterwards.
+  function initCarousel() {
+    const root = document.querySelector<HTMLElement>('[data-carousel]');
+    // Not the journal index, or this DOM has already been wired.
+    if (!root || root.dataset.carouselReady) return;
+    root.dataset.carouselReady = 'true';
+    const viewport = root.querySelector<HTMLElement>('[data-carousel-viewport]')!;
+    const track = root.querySelector<HTMLElement>('[data-carousel-track]')!;
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-slide]'));
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-dot]'));
+    // The counter sits up in the page header, outside the carousel section.
+    const counter = document.querySelector<HTMLElement>('[data-carousel-current]');
+    const prev = root.querySelector<HTMLButtonElement>('[data-carousel-prev]');
+    const next = root.querySelector<HTMLButtonElement>('[data-carousel-next]');
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // -1, not 0, so the first mark() is never swallowed by its own no-op guard
+    // and every control gets synced from one place.
+    let active = -1;
+
+    // The lead-in is measured off the page title, so the first chapter opens
+    // flush under "Photo-Journal" rather than floating in the middle of the
+    // page. Everything after it still snaps to centre — the first card is the
+    // only one that can't, because the track cannot scroll past its own start.
+    //
+    // The tail can't be padding: Chrome leaves a scroll container's trailing
+    // padding out of scrollWidth, so the last cards could never actually reach
+    // the middle. It is a real flex item (the track's ::after), which does
+    // count — minus one gap, since the flex gap already sits in front of it.
+    function fitEnds() {
+      if (!slides.length) return;
+      const w = viewport.clientWidth;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      const tail = Math.max(0, (w - slides[slides.length - 1].offsetWidth) / 2);
+      const title = document.querySelector<HTMLElement>('.journal__title');
+      const lead = title ? Math.max(0, title.getBoundingClientRect().left) : 0;
+      track.style.paddingLeft = `${lead}px`;
+      track.style.setProperty('--end-space', `${Math.max(0, tail - gap)}px`);
+    }
+
+    /** Re-measure the track and put the centred chapter back under the middle.
+     *  `fitEnds()` on its own changes the geometry the scroll position was
+     *  measured against, so whatever was centred drifts off — visible on a
+     *  direct load of /photo-journal#some-chapter, which jumped to the right
+     *  place and then slid away as each cover finished decoding and re-fitted
+     *  the ends underneath it. */
+    function refit() {
+      fitEnds();
+      const held = travellingTo >= 0 ? travellingTo : Math.max(0, active);
+      cancelAnimationFrame(anim);
+      anim = 0;
+      viewport.scrollLeft = restingScroll(held);
+      travellingTo = -1; // we are there now; the jump was instant
+    }
+
+    // Where the track would have to sit for card `i` to be the one on show —
+    // its centred position, CLAMPED to what the track can actually scroll to.
+    // The clamp is the whole point: the first card is aligned to the title and
+    // so can never reach the centre, and the last can't either. Measuring
+    // against the raw centre would leave card 1 marked active while card 0 sits
+    // at rest in front of you.
+    function restingScroll(i: number) {
+      const slide = slides[i];
+      const raw = slide.offsetLeft + slide.offsetWidth / 2 - viewport.clientWidth / 2;
+      const max = viewport.scrollWidth - viewport.clientWidth;
+      return Math.min(max, Math.max(0, raw));
+    }
+
+    /** The slug of the chapter a slide opens, read off its own link. */
+    function slugOf(i: number) {
+      const href = slides[i]?.querySelector('a')?.getAttribute('href') ?? '';
+      return href.split('/').filter(Boolean).pop() ?? '';
+    }
+
+    function mark(i: number) {
+      if (i === active) return;
+      active = i;
+      slides.forEach((s, n) => s.toggleAttribute('data-active', n === i));
+      dots.forEach((d, n) => d.toggleAttribute('data-active', n === i));
+      if (counter) counter.textContent = String(i + 1).padStart(2, '0');
+      if (prev) prev.disabled = i === 0;
+      if (next) next.disabled = i === slides.length - 1;
+
+      // Name the centred chapter in the URL. This is what makes coming back out
+      // of a chapter land you where you were instead of at the first tile: the
+      // hash is on the index's own history entry, so the browser's Back button
+      // restores it, the chapter page's back link points at it explicitly, and
+      // a reload or a shared link opens on it too.
+      //
+      // replaceState, not pushState — moving along the carousel is not
+      // navigation, and every step would otherwise be a Back to walk out of.
+      // history.state is passed through because <ClientRouter /> keeps its own
+      // bookkeeping in there.
+      const slug = slugOf(i);
+      if (slug && location.hash.slice(1) !== slug) {
+        history.replaceState(history.state, '', `#${slug}`);
+      }
+    }
+
+    // WE OWN THE SCROLL POSITION. Native CSS scroll-snap is switched off from
+    // here (only from here — with JS off the CSS still snaps, which is the whole
+    // point of leaving it in the stylesheet).
+    //
+    // Why: the browser's snapping is a SECOND system moving this track, and it
+    // re-snaps on its own schedule — during a smooth scrollTo, after a layout
+    // change, at the end of a fling. Two owners fighting over one scroll
+    // position is what "it flies by, or skips back to a previous chapter" is.
+    // A carousel that steps one chapter per push cannot share custody.
+    viewport.style.scrollSnapType = 'none';
+
+    // The track STAYS a horizontal scroll container (overflow-x: auto in the
+    // stylesheet). Setting it to hidden also worked — an overflow-hidden element
+    // is still scrollable programmatically — but it made macOS Chrome treat a
+    // sideways swipe as a history gesture and navigate back a page, because
+    // nothing on the page was absorbing the horizontal scroll any more.
+    //
+    // So instead the container keeps absorbing it, and two things stop the
+    // browser doing anything with it:
+    //
+    //   - `overscroll-behavior-x: contain` — no chaining out to the back-swipe,
+    //     including at the two ends of the carousel where the track can't move.
+    //   - the wheel handler commits to an AXIS for the whole gesture and claims
+    //     every event of a horizontal one. That is the fix for the original
+    //     complaint: a trackpad swipe is never purely horizontal, so the events
+    //     where |deltaY| edged past |deltaX| used to fall through, and the
+    //     browser scrolled the track with them — past the one-chapter-per-push
+    //     gate entirely ("it flies by"), leaving it between chapters, where the
+    //     next reading of the position rounded back to the one before.
+    //     Lowering the trackpad's speed can't help: the same events still
+    //     arrive, only smaller.
+    viewport.style.overscrollBehaviorX = 'contain';
+
+    // Our own glide, so the duration is ours to pick rather than whatever
+    // `behavior: 'smooth'` feels like doing — decelerating, and unhurried:
+    // these are holiday photographs, not a to-do list. Slowed again from 360ms
+    // on request; must stay under STEP_FLOOR so a glide always lands before
+    // the next one can set off.
+    const SLIDE_MS = 560;
+    const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+    let anim = 0;
+
+    function glide(to: number) {
+      cancelAnimationFrame(anim);
+      anim = 0;
+      const from = viewport.scrollLeft;
+      const distance = to - from;
+      if (reduce.matches || Math.abs(distance) < 1) {
+        viewport.scrollLeft = to;
+        travellingTo = -1;
+        return;
+      }
+      const startedAt = performance.now();
+      const frame = (now: number) => {
+        const p = Math.min(1, (now - startedAt) / SLIDE_MS);
+        viewport.scrollLeft = from + distance * easeOut(p);
+        if (p < 1) {
+          anim = requestAnimationFrame(frame);
+        } else {
+          anim = 0;
+          travellingTo = -1;
+        }
+      };
+      anim = requestAnimationFrame(frame);
+    }
+
+    // Where go() is taking us, and when it set off. While a programmatic scroll
+    // is in flight the scroll position is BEHIND the decision — it still reads
+    // as the chapter we are leaving — so it must not be allowed to speak for
+    // which chapter is current. Without this the carousel arrives and then
+    // reports the previous chapter, and anything that re-anchors on `active`
+    // (refit, the next wheel step) drags it back there.
+    let travellingTo = -1;
+    let departedAt = 0;
+    const ARRIVED = 3; // px
+    const TRAVEL_MAX = 900; // ms — a scroll that never quite lands still ends
+
+    function go(i: number) {
+      const target = Math.min(slides.length - 1, Math.max(0, i));
+      travellingTo = target;
+      departedAt = performance.now();
+      mark(target);
+      glide(restingScroll(target));
+    }
+
+    /** AFTER a scroll: make sure the track is exactly where `active` says it is.
+     *
+     *  THE CHAPTER IS NEVER DERIVED FROM THE SCROLL POSITION ANY MORE. Every way
+     *  of moving this carousel now goes through go(), so `active` is known, not
+     *  guessed — and reading it back off the pixels is what produced the little
+     *  nudge backwards at the end of a swipe: a resting position recomputed a
+     *  frame later (a cover finishing its decode is enough) would round to the
+     *  chapter before and glide there, visibly, after you had already arrived.
+     *
+     *  Any correction here is therefore an instant snap, not a second glide.
+     *  There is nothing to animate — you are already meant to be there. */
+    function land() {
+      if (travellingTo >= 0 && performance.now() - departedAt < TRAVEL_MAX) return;
+      travellingTo = -1;
+      if (active < 0) return;
+      const resting = restingScroll(active);
+      if (Math.abs(viewport.scrollLeft - resting) > ARRIVED) {
+        cancelAnimationFrame(anim);
+        anim = 0;
+        viewport.scrollLeft = resting;
+      }
+    }
+
+    let settleTimer = 0;
+
+    function settle() {
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(land, 120);
+    }
+
+    viewport.addEventListener('scroll', settle, { passive: true });
+    viewport.addEventListener('scrollend', land);
+
+    // ONE GESTURE, ONE CHAPTER — measured as DISTANCE TRAVELLED, not from the
+    // shape of the wheel deltas.
+    //
+    // The rising-edge version of this went wrong three times, and the recorder
+    // finally showed why. A real trackpad swipe here arrives as a long stream of
+    // `dx=1.2` events. Every rule written in terms of one event's magnitude —
+    // "is this bigger than the last one", "is it above PUSH_MIN", "commit to an
+    // axis once a delta exceeds 2px" — reads that stream as nothing at all, so
+    // the events fell through unclaimed and the BROWSER scrolled the track with
+    // them, a pixel at a time, past every gate. Measured: 427 of 435 events
+    // unclaimed, the track creeping 1310 -> 1318 while the carousel believed it
+    // had not moved.
+    //
+    // And it got worse the more carefully you scrolled: turning the trackpad
+    // speed down makes every delta smaller, so MORE of them slip under a
+    // per-event threshold. That is exactly backwards from how it should behave.
+    //
+    // Distance has none of those problems. It doesn't care whether it arrives as
+    // one shove or two hundred crumbs, it can't be tuned out by a system
+    // preference, and one step per gesture falls straight out of it.
+    // BUT the spent flag cannot wait on silence alone. macOS momentum keeps
+    // wheel events coming for a second or more after a flick, each one
+    // re-arming the silence timer — so a second swipe made during that tail
+    // found `stepped` still set and did nothing. A timer that incoming events
+    // re-arm starves. The release is a property of the gesture itself instead:
+    // momentum only ever DECAYS, so a delta clearly rising out of the tail is
+    // a new push — it clears the flag and starts a fresh distance count.
+    //
+    // These constants are shared with the chapter stacks — keep them in step.
+    const SWIPE_DISTANCE = 45; // px of horizontal travel before it counts
+    const AXIS_DECIDE = 6; // px travelled before the direction is called
+    const GESTURE_END = 110; // ms of silence that ends a gesture
+    const PUSH_MIN = 6; // px/event — below this nothing reads as a new push
+    const PUSH_RISE = 1.6; // this much bigger than the last event = a new push
+    // A FLOOR, never re-armed by incoming events, only by a step. Held, not
+    // queued — a push that comes too soon is spent, not saved up.
+    const STEP_FLOOR = 660; // ms between steps
+
+    let sumX = 0;
+    let sumY = 0;
+    let stepped = false;
+    let gestureTimer = 0;
+    let axis: '' | 'x' | 'y' = '';
+    let lastMag = 0;
+    // Not 0: performance.now() starts at 0 on navigation, so 0 would hold the
+    // first push of a freshly opened page for a whole STEP_FLOOR.
+    let lastStep = -STEP_FLOOR;
+
+    viewport.addEventListener(
+      'wheel',
+      (event) => {
+        window.clearTimeout(gestureTimer);
+        gestureTimer = window.setTimeout(() => {
+          sumX = 0;
+          sumY = 0;
+          stepped = false;
+          axis = '';
+          lastMag = 0;
+        }, GESTURE_END);
+
+        // A NEW PUSH arriving inside a continuing stream: clearly risen out of
+        // the decay, so the previous push's spend no longer applies. The new
+        // one must earn its own SWIPE_DISTANCE from here. The axis, once
+        // called, is NOT reset — the gesture is still the same hands.
+        const mag = Math.abs(event.deltaX);
+        if (mag >= PUSH_MIN && mag > lastMag * PUSH_RISE) {
+          stepped = false;
+          sumX = 0;
+          sumY = 0;
+        }
+        lastMag = mag;
+
+        sumX += event.deltaX;
+        sumY += event.deltaY;
+
+        // Which way is this gesture going — decided from how far it has gone,
+        // not from one event, and then held until the gesture ends.
+        if (!axis && (Math.abs(sumX) > AXIS_DECIDE || Math.abs(sumY) > AXIS_DECIDE)) {
+          axis = Math.abs(sumX) > Math.abs(sumY) ? 'x' : 'y';
+        }
+
+        // A vertical gesture belongs to the page, all the way through.
+        if (axis === 'y') return;
+
+        // Ours, or not yet decided: claim anything with a horizontal component,
+        // so the browser cannot creep the track while we are still deciding.
+        // This is the line whose absence caused all of it.
+        if (axis === 'x' || event.deltaX !== 0) event.preventDefault();
+
+        if (axis !== 'x' || stepped) return;
+        if (Math.abs(sumX) < SWIPE_DISTANCE) return;
+
+        stepped = true; // spent — cleared by silence above, or by the next clear rise
+        const now = performance.now();
+        if (now - lastStep < STEP_FLOOR) return; // held: too soon after the last one
+        lastStep = now;
+        go(active + (sumX > 0 ? 1 : -1));
+      },
+      { passive: false },
+    );
+
+    // Touch: one swipe, one chapter — the same bargain as one push, one chapter.
+    let touchX = 0;
+    let touchY = 0;
+    let touchAxis = '';
+    const SWIPE_MIN = 40; // px before it counts as a swipe rather than a graze
+
+    viewport.addEventListener(
+      'touchstart',
+      (event) => {
+        const touch = event.touches[0];
+        touchX = touch.clientX;
+        touchY = touch.clientY;
+        touchAxis = '';
+      },
+      { passive: true },
+    );
+
+    viewport.addEventListener(
+      'touchmove',
+      (event) => {
+        const touch = event.touches[0];
+        const dx = touch.clientX - touchX;
+        const dy = touch.clientY - touchY;
+        // Commit to an axis once, on the first movement worth reading, and hold
+        // it for the gesture — otherwise a diagonal swipe flickers between
+        // scrolling the page and driving the carousel.
+        if (!touchAxis && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+          touchAxis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        }
+        if (touchAxis === 'x') event.preventDefault();
+      },
+      { passive: false },
+    );
+
+    viewport.addEventListener(
+      'touchend',
+      (event) => {
+        if (touchAxis !== 'x') return;
+        const dx = event.changedTouches[0].clientX - touchX;
+        if (Math.abs(dx) > SWIPE_MIN) go(active + (dx < 0 ? 1 : -1));
+        touchAxis = '';
+      },
+      { passive: true },
+    );
+
+    prev?.addEventListener('click', () => go(active - 1));
+    next?.addEventListener('click', () => go(active + 1));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => go(i)));
+
+    // A click on an off-centre card brings it to the centre; only the centred
+    // card opens its chapter.
+    slides.forEach((slide, i) => {
+      slide.querySelector('a')?.addEventListener('click', (event) => {
+        if (i !== active) {
+          event.preventDefault();
+          go(i);
+        }
+      });
+    });
+
+    viewport.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        go(active + 1);
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        go(active - 1);
+      }
+    });
+
+    // These two are on `window`, so they outlive the DOM they close over —
+    // unlike everything above, which is attached inside the swapped page and
+    // goes with it. Left alone they would pile up one stale copy per visit,
+    // each still measuring a track that is no longer in the document.
+    const onResize = () => {
+      const held = Math.max(0, active);
+      active = -1;
+      fitEnds();
+      cancelAnimationFrame(anim);
+      anim = 0;
+      viewport.scrollLeft = restingScroll(held);
+      mark(held);
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('load', refit);
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        window.removeEventListener('resize', onResize);
+        window.removeEventListener('load', refit);
+      },
+      { once: true },
+    );
+
+    // Dev-only recorder. If the carousel still misbehaves, reproduce it and read
+    // `__carousel()` in the console: every wheel event, whether it was claimed,
+    // and every change of chapter, in order.
+    if (import.meta.env.DEV) {
+      const log: string[] = [];
+      const t0 = performance.now();
+      const stamp = () => (performance.now() - t0).toFixed(0).padStart(6);
+      // Written to localStorage as well as memory. Same origin, so it can be
+      // read from ANY tab on localhost — which means the log of a real gesture
+      // can be collected without anyone having to copy anything out of a
+      // console. Debounced, so a burst of wheel events doesn't write 40 times.
+      let saveTimer = 0;
+      const save = () => {
+        window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(() => {
+          try {
+            localStorage.setItem('pj:carousel', log.join('\n'));
+          } catch {
+            /* private mode, or full — the in-memory log still works */
+          }
+        }, 400);
+      };
+      viewport.addEventListener(
+        'wheel',
+        (e) => {
+          log.push(
+            `${stamp()}  wheel dx=${e.deltaX.toFixed(1)} dy=${e.deltaY.toFixed(1)} ` +
+              `${e.defaultPrevented ? 'CLAIMED' : 'fell through'} scrollLeft=${Math.round(viewport.scrollLeft)}`,
+          );
+          if (log.length > 400) log.shift();
+          save();
+        },
+        { passive: true }, // after the real handler, so defaultPrevented is set
+      );
+      const counterNode = counter;
+      if (counterNode) {
+        new MutationObserver(() => {
+          log.push(`${stamp()}  chapter -> ${counterNode.textContent}`);
+          save();
+        }).observe(
+          counterNode,
+          { childList: true, characterData: true, subtree: true },
+        );
+      }
+      // Prints readably AND copies to the clipboard, so the report can just be
+      // pasted back rather than read off the screen.
+      (window as unknown as { __carousel: () => string }).__carousel = () => {
+        const report = log.join('\n');
+        // eslint-disable-next-line no-console
+        console.log(report);
+        navigator.clipboard?.writeText(report).then(
+          () => console.log('%c^ copied to clipboard — paste it to Claude', 'color:#8fbf6f'),
+          () => console.log('%c(clipboard blocked — select the lines above and copy)', 'color:#d0a24c'),
+        );
+        return `${log.length} lines recorded`;
+      };
+    }
+
+    fitEnds();
+
+    // Open on the chapter named in the URL, if there is one. Jumped to rather
+    // than scrolled: this is where the page STARTS, so animating in from the
+    // first tile would be a transition out of somewhere you were never at.
+    const wanted = decodeURIComponent(location.hash.slice(1));
+    const start = wanted ? slides.findIndex((_, i) => slugOf(i) === wanted) : -1;
+    if (start > 0) {
+      viewport.scrollLeft = restingScroll(start);
+      mark(start);
+    } else {
+      mark(0);
+    }
+    // Covers change the track's measurements as they decode, so the ends are
+    // re-fitted once everything has laid out. `load` only ever fires once, and
+    // never at all when you arrive by client-side navigation, so the ends are
+    // also re-fitted as each cover finishes decoding.
+    root.querySelectorAll('img').forEach((img) => {
+      if (img.complete) return;
+      img.addEventListener('load', refit, { once: true });
+    });
+  }
+
+  document.addEventListener('astro:page-load', initCarousel);
+</script>
+
+<style>
+  /* The journal runs dark end to end — photographs sit forward against it in a
+     way they never do on the site's cream. The page itself is dark from <html>
+     down (BaseLayout theme="dark"), header and footer included, so this is only
+     restating it for the article's own box; every colour below comes from the
+     same two tokens the theme re-points. */
+  .journal {
+    /* The three numbers that tune the carousel. */
+    --card-h: clamp(14rem, 44vh, 32rem);
+    --card-gap: var(--space-12);
+    --card-rest: 0.82; /* how far back the off-centre cards sit */
+    --card-settle: 240ms; /* how quickly a card comes forward */
+
+    background: var(--color-bg);
+    color: var(--color-ink);
+    padding-bottom: var(--space-24);
+  }
+
+  .journal__head {
+    padding-block: var(--space-16) var(--space-12);
+  }
+
+  /* Title left, position right, rule under both — the counter tells you how far
+     through the places you are, which a carousel otherwise hides. */
+  .journal__headrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-8);
+  }
+
+  .journal__title {
+    font-size: var(--text-2xl);
+  }
+
+  .journal__counter {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    color: var(--color-ink);
+  }
+
+  .journal__counter [data-carousel-current] {
+    color: var(--color-ink);
+  }
+
+  .journal__rule {
+    border: 0;
+    border-top: 1px solid rgba(242, 237, 225, 0.18);
+    margin-top: var(--space-4);
+  }
+
+  .journal__note {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-ink);
+    margin-top: var(--space-4);
+  }
+
+  /* --- Carousel -------------------------------------------------------- */
+  .carousel {
+    position: relative;
+    padding-top: var(--space-12);
+  }
+
+  .carousel__viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .carousel__viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .carousel__viewport:focus-visible {
+    outline: 1px solid rgba(242, 237, 225, 0.4);
+    outline-offset: 4px;
+  }
+
+  .carousel__track {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--card-gap);
+    /* Replaced in script with a value measured off the title; this puts the
+       first card on the same left edge before that runs. */
+    padding-left: calc(max(0px, (100vw - var(--container-max)) / 2) + var(--container-padding));
+    padding-right: 0;
+    margin: 0;
+    padding-block: 0;
+    list-style: none;
+  }
+
+  /* The run-out after the last card. It has to be a flex item rather than
+     padding — see fitEnds() in the script. */
+  .carousel__track::after {
+    content: '';
+    flex: 0 0 var(--end-space, 22vw);
+    align-self: stretch;
+  }
+
+  /* Same height for every card, width from its own cover's proportions — that
+     is what keeps a landscape cover landscape and stops anything being cropped
+     into a shape it was never shot in. */
+  .slide {
+    flex: 0 0 auto;
+    width: min(86vw, calc(var(--card-h) * var(--ar)));
+    scroll-snap-align: center;
+    /* Every card is a full stop: a hard swipe advances one chapter rather than
+       coasting through several. This is the rigidity dial. */
+    scroll-snap-stop: always;
+  }
+
+  .slide__link {
+    display: block;
+    color: inherit;
+    transform: scale(var(--card-rest));
+    opacity: 0.4;
+    transition:
+      transform var(--card-settle) var(--ease-standard),
+      opacity var(--card-settle) var(--ease-standard);
+  }
+
+  .slide[data-active] .slide__link {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  /* The frame carries the cover's exact ratio, so the image fills it with
+     nothing trimmed. The chapter's earth tone shows through until it decodes. */
+  .slide__frame {
+    aspect-ratio: var(--ar);
+    background: var(--tint);
+    overflow: hidden;
+  }
+
+  .slide__frame :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .slide__label {
+    padding-top: var(--space-4);
+  }
+
+  .slide__name {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 500;
+    line-height: 1.15;
+  }
+
+  .slide__count {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    padding-top: var(--space-2);
+  }
+
+  /* --- Controls -------------------------------------------------------- */
+  .carousel__arrow {
+    position: absolute;
+    top: calc(var(--space-12) + var(--card-h) / 2);
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(242, 237, 225, 0.1);
+    color: var(--color-ink);
+    transition:
+      background var(--duration-fast) var(--ease-standard),
+      opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .carousel__arrow:hover {
+    background: rgba(242, 237, 225, 0.22);
+  }
+
+  .carousel__arrow:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  .carousel__arrow svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .carousel__arrow--prev {
+    left: var(--container-padding);
+  }
+
+  .carousel__arrow--next {
+    right: var(--container-padding);
+  }
+
+  .carousel__dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-12) 0 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .carousel__dots button {
+    display: block;
+    width: 1.5rem;
+    height: 3px;
+    background: rgba(242, 237, 225, 0.25);
+    transition: background var(--duration-fast) var(--ease-standard);
+  }
+
+  .carousel__dots button:hover {
+    background: rgba(242, 237, 225, 0.5);
+  }
+
+  .carousel__dots button[data-active] {
+    background: var(--color-ink);
+  }
+
+  @media (max-width: 48rem) {
+    .journal {
+      --card-h: clamp(12rem, 38vh, 22rem);
+      --card-gap: var(--space-6);
+    }
+
+    /* No room to sit an arrow beside the cards on a phone — swipe is the
+       control there, and the dots still show where you are. */
+    .carousel__arrow {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide__link {
+      transition: none;
+    }
+  }
+</style>
+
+
+
+
+
+
+
+

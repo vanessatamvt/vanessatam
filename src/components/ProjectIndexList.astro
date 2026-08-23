@@ -25,7 +25,7 @@ const groups: { label: string; items: CollectionEntry<'projects'>[] }[] = [
           {group.items.map((project) => (
             <>
               <a href={`/work/${project.id}`} class="project-index__row">
-                <span class="project-index__code">VT {project.data.code}</span>
+                <span class="project-index__code">PROJECT {project.data.code}</span>
                 <span class="project-index__title">{project.data.title}</span>
                 <span class="project-index__arrow" aria-hidden="true">
                   &nearr;

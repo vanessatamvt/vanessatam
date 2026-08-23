@@ -5,12 +5,14 @@
 // another row of project trivia.
 interface Props {
   responsibilities?: string;
+  details?: string[];
 }
-const { responsibilities } = Astro.props;
+const { responsibilities, details } = Astro.props;
 const items = (responsibilities ?? '')
   .split(',')
   .map((item) => item.trim())
   .filter(Boolean);
+const detailItems = (details ?? []).filter(Boolean);
 ---
 
 {
@@ -23,6 +25,13 @@ const items = (responsibilities ?? '')
             <li class="role-highlight__tag">{item}</li>
           ))}
         </ul>
+        {detailItems.length > 0 && (
+          <ul class="role-highlight__details">
+            {detailItems.map((item) => (
+              <li class="role-highlight__detail">{item}</li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   )
@@ -67,5 +76,33 @@ const items = (responsibilities ?? '')
     margin-inline: var(--space-4);
     background: var(--color-accent);
     vertical-align: middle;
+  }
+
+  /* The itemized task breakdown — one level down from the role tags above:
+     body-copy size, muted color, same square accent marker (not a round
+     bullet) so it echoes the tag divider instead of introducing a new shape. */
+  .role-highlight__details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    max-width: var(--text-measure);
+  }
+
+  .role-highlight__detail {
+    display: flex;
+    gap: var(--space-3);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    color: var(--color-muted);
+  }
+
+  .role-highlight__detail::before {
+    content: '';
+    flex-shrink: 0;
+    width: 0.35em;
+    height: 0.35em;
+    margin-top: 0.55em;
+    background: var(--color-accent);
   }
 </style>

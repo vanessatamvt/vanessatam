@@ -1,0 +1,826 @@
+---
+// One chapter of the photo-journal — every photograph in a single folder,
+// stacked side to side rather than laid out down the page.
+//
+// THE STACK: the current photograph sits leftmost and largest; the ones still to
+// come recede to the right behind it, each smaller than the last, so all you see
+// of them is a vertical band down the right-hand side. Advancing pulls the next
+// one left and forward and lets the current one go past you.
+//
+// SIZING: every card is the same HEIGHT and takes its WIDTH from its own
+// photograph's aspect ratio, so a landscape stays landscape, a portrait stays
+// portrait, and nothing is ever cropped.
+//
+// WHY THE PLACEMENT IS IN JAVASCRIPT: the recession runs along the width, and
+// the width is the thing that varies. An offset written in CSS as a share of
+// each card's own width makes an upright sitting behind a landscape disappear
+// completely. So each card behind is placed from MEASURED widths, so that its
+// right edge clears the one in front of it by a fixed sliver.
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { loadChapters, type LoadedChapter, type Photo } from '../../lib/photo-journal';
+
+export async function getStaticPaths() {
+  return loadChapters().map((chapter) => ({
+    params: { chapter: chapter.slug },
+    props: { chapter },
+  }));
+}
+
+const { chapter } = Astro.props as { chapter: LoadedChapter };
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const ratio = (photo: Photo) => photo.src.width / photo.src.height;
+
+/** "3:2", "2:3", "16:9" — reduced from the real pixel dimensions, so it is exact
+ *  rather than matched against a list. Anything that doesn't reduce to small
+ *  whole numbers falls back to a decimal. */
+// Filenames are deliberately NOT surfaced anywhere in the page — not on the
+// photographs, not in the ruler. /photo-journal/contact-sheet is where to look
+// one up when writing captions; a tooltip that follows the cursor across a
+// photograph is not.
+function shapeLabel(photo: Photo) {
+  const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
+  const g = gcd(photo.src.width, photo.src.height);
+  const w = photo.src.width / g;
+  const h = photo.src.height / g;
+  const shape = photo.wide ? 'landscape' : 'upright';
+  return w <= 32 && h <= 32 ? `${shape} ${w}:${h}` : `${shape} ${ratio(photo).toFixed(2)}:1`;
+}
+
+/** The running order.
+ *
+ *  THE COVER OPENS THE CHAPTER. Whatever you chose as the chapter's cover on the
+ *  index is the photograph you land on, so clicking a tile carries straight
+ *  through instead of cutting to whatever happened to be first in the folder.
+ *
+ *  Then one frame SHAPE at a time — the cover's shape first, then the rest
+ *  widest to narrowest — with filename order kept inside each shape. The stack
+ *  recedes sideways, so grouping is what stops the front photograph changing
+ *  width every other step. `keepShotOrder` opts a chapter out; see the note on
+ *  the flag in src/data/photo-journal.ts. */
+function order(c: LoadedChapter): Photo[] {
+  const cover = c.cover ?? c.photos[0];
+  if (c.keepShotOrder) {
+    return sequenced([cover, ...c.photos.filter((p) => p !== cover)], c.sequence);
+  }
+  const shapes = [...new Set(c.photos.map(ratio))]
+    .sort((a, b) => b - a) // widest first
+    .sort((a, b) => Number(b === ratio(cover)) - Number(a === ratio(cover))); // cover's shape leads
+  const grouped = shapes.flatMap((r) => c.photos.filter((p) => ratio(p) === r));
+  // ...and the cover itself to the very front of its own group.
+  return sequenced([cover, ...grouped.filter((p) => p !== cover)], c.sequence);
+}
+
+/** Apply a chapter's `sequence` override: the named photographs take the slots
+ *  they already occupy, filled in the order listed. Applied LAST, so it wins
+ *  over both the grouping and the cover. Anything named but not found in the
+ *  folder is ignored rather than throwing — a filename can be mistyped, and a
+ *  chapter page is not the place to find out. */
+function sequenced(list: Photo[], sequence?: string[]): Photo[] {
+  const named = (sequence ?? [])
+    .map((file) => list.find((p) => p.file === file))
+    .filter((p): p is Photo => Boolean(p));
+  if (named.length < 2) return list;
+  const slots = list.flatMap((p, i) => (named.includes(p) ? [i] : []));
+  const out = list.slice();
+  slots.forEach((slot, i) => {
+    out[slot] = named[i];
+  });
+  return out;
+}
+
+const photos = order(chapter);
+const total = photos.length;
+const opening = photos[0];
+
+// THE RECESSION. These two series appear twice — here and in the script below —
+// and they must match: this is the build-time copy, used only to work out how
+// much room the assembly needs.
+const SCALES = [1, 0.86, 0.74, 0.64, 0.56];
+const SLIVERS = [0, 0.14, 0.1, 0.07, 0.05];
+
+// How wide the assembly gets, in card heights: the front photograph plus one
+// sliver for each card behind it. Nothing behind can add more than its sliver —
+// see the placement note in the script — so this is exact, and the front card's
+// position depends only on ITS OWN width. Walked over every starting position
+// anyway, so it stays honest if the recession is ever retuned.
+function assemblyReach(list: Photo[]) {
+  const slivers = SLIVERS.reduce((a, b) => a + b, 0);
+  let worst = 0;
+  for (let start = 0; start < list.length; start += 1) {
+    worst = Math.max(worst, ratio(list[start]) + slivers);
+  }
+  return worst;
+}
+
+const reach = assemblyReach(photos);
+
+// A hairline in the ruler wherever the frame shape changes.
+const breaks = photos.map((p, i) => i > 0 && ratio(p) !== ratio(photos[i - 1]));
+
+// The ruler is one strip, never a wrapped block — a second row would push the
+// chapter below the fold, and the height budget can't know how many rows there
+// would be. So it sizes itself down to fit: the ticks' widths are their shapes
+// times one shared height, and that height is whatever leaves the whole strip
+// inside the page. A 45-photograph chapter lands at about 10px tall, which
+// still reads as a filmstrip; short chapters just take the 1.375rem cap.
+const GAP = 5; // px between ticks
+const BREAK_GAP = 10; // px extra at a change of shape
+const rulerSum = photos.reduce((total, p) => total + ratio(p), 0);
+const rulerGaps = (total - 1) * GAP + breaks.filter(Boolean).length * BREAK_GAP;
+---
+
+<BaseLayout
+  title={`${chapter.folder} — Photo-Journal`}
+  description={chapter.intro || `Photographs from ${chapter.folder} by Vanessa Tam.`}
+  headerVariant="project"
+  backLabel="Photo-Journal"
+  backHref={`/photo-journal#${chapter.slug}`}
+  theme="dark"
+>
+  <article
+    class="chapter"
+    style={`--tint:${chapter.tint}; --reach:${reach.toFixed(4)}; --ruler-sum:${rulerSum.toFixed(4)}; --ruler-gaps:${rulerGaps}px`}
+  >
+    <section class="container chapter__head">
+      <h1 class="chapter__title">{chapter.folder}</h1>
+      <span class="chapter__count">{total} photographs</span>
+      <hr class="chapter__rule" />
+      {chapter.intro && <p class="chapter__intro">{chapter.intro}</p>}
+    </section>
+
+    <section
+      class="stack"
+      data-stack
+      aria-roledescription="carousel"
+      aria-label={`Photographs from ${chapter.folder}`}
+    >
+      <div class="stack__stage" data-stack-stage tabindex="0">
+        <ul class="stack__cards">
+          {
+            photos.map((photo, i) => (
+              <li
+                class="card"
+                data-card
+                data-index={i}
+                data-ar={ratio(photo).toFixed(4)}
+                data-depth={i === 0 ? '0' : i < 5 ? String(i) : i < 8 ? 'near' : 'far'}
+                data-caption={photo.caption ?? ''}
+                style={`--ar:${ratio(photo).toFixed(4)}`}
+              >
+                <button
+                  class="card__button"
+                  type="button"
+                  data-card-button
+                  aria-label={`Photograph ${i + 1} of ${total}`}
+                >
+                  <Image
+                    src={photo.src}
+                    alt={photo.caption ?? ''}
+                    widths={[440, 880, 1500]}
+                    sizes="(min-width: 48rem) 66vw, 88vw"
+                    loading={i < 5 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <!-- Below the stack, in the same shape the plates used: the number on the
+           left, the reflection set at a tab stop from it. -->
+      <div class="container stack__meta">
+        <span class="stack__index">
+          <span data-stack-index>{pad(1)}</span> / {pad(total)}
+        </span>
+        <p class="stack__caption" data-stack-caption>{opening?.caption ?? ''}</p>
+      </div>
+
+      <div class="container stack__controls">
+        <button class="stack__arrow" type="button" data-stack-prev aria-label="Previous photograph">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4l-8 8 8 8" /></svg>
+        </button>
+        <div class="stack__progress" aria-hidden="true">
+          <span data-stack-progress></span>
+        </div>
+        <button class="stack__arrow" type="button" data-stack-next aria-label="Next photograph">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4l8 8-8 8" /></svg>
+        </button>
+      </div>
+
+      <!-- The running order, drawn to proportion: one frame per photograph at
+           its own shape, with a hairline wherever the shape changes. It is a
+           map of the chapter and a way to jump about in it. -->
+      <div class="container stack__ruler" data-stack-ruler role="group" aria-label="Running order">
+        {
+          photos.map((photo, i) => (
+            <button
+              class="stack__tick"
+              type="button"
+              data-ruler-tick
+              data-index={i}
+              data-break={breaks[i] ? 'true' : undefined}
+              style={`--ar:${ratio(photo).toFixed(4)}`}
+              title={`${pad(i + 1)} / ${pad(total)} — ${shapeLabel(photo)}`}
+              aria-label={`Photograph ${i + 1} of ${total}`}
+            />
+          ))
+        }
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<script>
+  // Bound on astro:page-load, NOT at module top level. <ClientRouter /> swaps the
+  // DOM without a reload and Astro runs a module script only ONCE per browser
+  // session, so top-level setup wires the first chapter you open and nothing
+  // after it — the stack arrives dead and only a refresh fixes it.
+  function initStack() {
+    const root = document.querySelector<HTMLElement>('[data-stack]');
+    if (!root || root.dataset.stackReady) return;
+    root.dataset.stackReady = 'true';
+
+    const stage = root.querySelector<HTMLElement>('[data-stack-stage]')!;
+    const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-card]'));
+    const ticks = Array.from(root.querySelectorAll<HTMLElement>('[data-ruler-tick]'));
+    const indexOut = root.querySelector<HTMLElement>('[data-stack-index]');
+    const captionOut = root.querySelector<HTMLElement>('[data-stack-caption]');
+    const progress = root.querySelector<HTMLElement>('[data-stack-progress]');
+    const prev = root.querySelector<HTMLButtonElement>('[data-stack-prev]');
+    const next = root.querySelector<HTMLButtonElement>('[data-stack-next]');
+
+    const count = cards.length;
+    let active = 0;
+
+    // The stack is a loop: past the last photograph you arrive back at the
+    // first. Depth is therefore measured the long way round.
+    const depthOf = (i: number) => (i - active + count) % count;
+
+    // How many of the photographs you have just passed keep animating forward
+    // and out. In a short chapter they are needed behind you instead.
+    const pastBand = Math.min(2, Math.max(0, count - 6));
+
+    // 0–4 are the ones you can see; 'near' is still rendering so its photograph
+    // preloads; 'far' is content-visibility:hidden, which stops the browser
+    // fetching dozens of images that are all technically on screen at once.
+    function band(depth: number) {
+      if (pastBand && depth >= count - pastBand) return 'past';
+      if (depth <= 4) return String(depth);
+      if (depth <= 7) return 'near';
+      return 'far';
+    }
+
+    // THE RECESSION. Scales and slivers are both DIMINISHING series — that is
+    // what makes it read as perspective rather than as a row of steps. The
+    // sliver is a share of the shared card HEIGHT, never of a card's own width:
+    // widths are what vary here, and an upright behind a landscape would vanish.
+    //
+    // These must match the copy in the frontmatter, which sizes the card from
+    // them. Change one, change both.
+    const SCALES = [1, 0.86, 0.74, 0.64, 0.56];
+    const FADES = [1, 0.92, 0.82, 0.72, 0.62];
+    const SLIVERS = [0, 0.14, 0.1, 0.07, 0.05];
+
+    const arOf = (card: HTMLElement) => Number(card.dataset.ar) || 1;
+
+    function render() {
+      const h = stage.clientHeight;
+      const stageW = stage.clientWidth;
+
+      // Walk outward from the front card: each one behind has its RIGHT edge a
+      // fixed sliver past the right edge of the card in front of it. So every
+      // card behind adds exactly its sliver to the assembly and nothing more,
+      // whatever shape it is — which is what keeps the front photograph in the
+      // same place whether the next one along is an upright or a 16:9.
+      //
+      // A WIDE card behind a NARROW one therefore starts a long way to the left:
+      // a 16:9 behind a 9:16 is nearly three times as wide, so putting its right
+      // edge a sliver along puts its left edge off the page (measured on Iceland
+      // photo 01: x = −427). Everything from the front card's left edge rightward
+      // is covered by the taller cards in front of it, so all that actually shows
+      // is the sliver — but the part sticking out to the LEFT of the front card
+      // has nothing over it. That part is clipped below, not moved: moving it is
+      // what used to shove the front photograph sideways.
+      const place = new Map<HTMLElement, { x: number; d: number }>();
+      let right = 0;
+      for (let d = 0; d < SCALES.length && d < count; d += 1) {
+        const card = cards[(active + d) % count];
+        const w = h * arOf(card) * SCALES[d];
+        const x = d === 0 ? 0 : right + SLIVERS[d] * h - w;
+        right = d === 0 ? w : right + SLIVERS[d] * h;
+        place.set(card, { x, d });
+      }
+      // The assembly is centred, not the front card — centring the front card
+      // instead makes the receding band jump every time the shape changes.
+      const offset = Math.max(0, (stageW - right) / 2);
+      const restX = offset + right - h * 0.2; // where the unseen ones wait
+
+      cards.forEach((card, i) => {
+        const depth = depthOf(i);
+        const at = band(depth);
+        card.dataset.depth = at;
+
+        const hit = place.get(card);
+        if (hit) {
+          card.style.setProperty('--x', `${offset + hit.x}px`);
+          card.style.setProperty('--s', String(SCALES[hit.d]));
+          card.style.opacity = String(FADES[hit.d]);
+          card.style.zIndex = String(100 - hit.d);
+          // Nothing paints left of the front card's left edge. The inset is in
+          // the card's OWN coordinates, so it is divided by the scale — the
+          // transform is applied after the clip.
+          card.style.clipPath =
+            hit.x < 0 ? `inset(0 0 0 ${(-hit.x / SCALES[hit.d]).toFixed(2)}px)` : 'none';
+        } else if (at === 'past') {
+          card.style.setProperty('--x', `${offset - h * 0.35}px`);
+          card.style.setProperty('--s', '1.06');
+          card.style.opacity = '0';
+          card.style.zIndex = '150';
+          card.style.clipPath = 'none';
+        } else {
+          card.style.setProperty('--x', `${restX}px`);
+          card.style.setProperty('--s', '0.5');
+          card.style.opacity = '0';
+          card.style.zIndex = String(Math.max(1, 100 - depth));
+          card.style.clipPath = 'none';
+        }
+
+        const button = card.querySelector('button');
+        if (button) button.tabIndex = depth === 0 ? 0 : -1;
+      });
+
+      const current = cards[active];
+      if (indexOut) indexOut.textContent = String(active + 1).padStart(2, '0');
+      if (captionOut) captionOut.textContent = current?.dataset.caption ?? '';
+      if (progress) progress.style.width = `${((active + 1) / count) * 100}%`;
+      ticks.forEach((tick, i) => tick.setAttribute('aria-current', String(i === active)));
+    }
+
+    function go(i: number) {
+      const target = ((i % count) + count) % count;
+      if (target === active) return;
+      active = target;
+      render();
+    }
+
+    prev?.addEventListener('click', () => go(active - 1));
+    next?.addEventListener('click', () => go(active + 1));
+    ticks.forEach((tick, i) => tick.addEventListener('click', () => go(i)));
+
+    // The front photograph steps forward; one behind it comes to the front.
+    cards.forEach((card, i) => {
+      card.querySelector('[data-card-button]')?.addEventListener('click', () => {
+        go(i === active ? active + 1 : i);
+      });
+    });
+
+    stage.addEventListener('keydown', (event) => {
+      const key = event.key;
+      if (key === 'ArrowDown' || key === 'ArrowRight') {
+        event.preventDefault();
+        go(active + 1);
+      } else if (key === 'ArrowUp' || key === 'ArrowLeft') {
+        event.preventDefault();
+        go(active - 1);
+      }
+    });
+
+    // ONE GESTURE, ONE PHOTOGRAPH — measured as DISTANCE TRAVELLED. See the
+    // long note in index.astro for why the per-event version kept leaking: a
+    // real trackpad swipe arrives as a stream of ~1px deltas, and every rule
+    // written in terms of one event's magnitude reads that as nothing.
+    //
+    // BUT the spent flag cannot wait on silence alone. macOS momentum keeps
+    // wheel events coming for a second or more after a flick, each one
+    // re-arming the silence timer — so a second swipe made during that tail
+    // found `stepped` still set and did nothing ("I can't keep scrolling
+    // without moving my cursor": moving the hand is what finally let 110ms of
+    // silence pass). A timer that incoming events re-arm starves. The release
+    // has to be a property of the gesture itself: momentum only ever DECAYS,
+    // so a delta clearly rising out of the tail is a new push — it clears the
+    // flag and starts a fresh distance count from zero.
+    const SWIPE_DISTANCE = 45; // px of travel before it counts
+    const GESTURE_END = 110; // ms of silence that ends a gesture
+    const PUSH_MIN = 6; // px/event — below this nothing reads as a new push
+    const PUSH_RISE = 1.6; // this much bigger than the last event = a new push
+    // The pace. A FLOOR, never re-armed by incoming events, only by a step:
+    // photographs can land no faster than one per STEP_FLOOR, so each one
+    // finishes its 640ms arrival and is held a moment before the next sets
+    // off. Held, not queued — a push that comes too soon is spent, not saved.
+    const STEP_FLOOR = 660; // ms between steps
+
+    let sumX = 0;
+    let sumY = 0;
+    let stepped = false;
+    let gestureTimer = 0;
+    let lastMag = 0;
+    // Not 0: performance.now() starts at 0 on navigation, so 0 would hold the
+    // first push of a freshly opened page for a whole STEP_FLOOR.
+    let lastStep = -STEP_FLOOR;
+    // The stack's edges, captured once per gesture — see stackBounds() below.
+    let gestureBounds: { left: number; right: number } | null = null;
+
+    // WHAT COUNTS AS "OVER THE STACK": the stage, minus a strip down each edge.
+    //
+    // It used to be the union of the visible photographs, re-measured per
+    // gesture. That made the control surface change shape underneath you: step
+    // from a landscape to an upright and the area narrows, so a cursor that was
+    // over a picture a moment ago is now outside it and the next swipe does
+    // nothing — "I can't scroll to the 2nd next image without moving my cursor".
+    // A control surface that moves when you use it is not one.
+    //
+    // The stage is exactly one card tall, so this is already a band rather than
+    // the whole page, and it never changes shape. The strip down each edge stays
+    // the page's, because the stack loops and there is otherwise no way to
+    // scroll away from it.
+    const ESCAPE_GUTTER = 44;
+
+    function stackBounds() {
+      const width = window.innerWidth;
+      const stage_ = stage.getBoundingClientRect();
+      if (width <= ESCAPE_GUTTER * 4) return { left: stage_.left, right: stage_.right };
+      return {
+        left: Math.max(stage_.left, ESCAPE_GUTTER),
+        right: Math.min(stage_.right, width - ESCAPE_GUTTER),
+      };
+    }
+
+    stage.addEventListener(
+      'wheel',
+      (event) => {
+        window.clearTimeout(gestureTimer);
+        gestureTimer = window.setTimeout(() => {
+          sumX = 0;
+          sumY = 0;
+          stepped = false;
+          lastMag = 0;
+          gestureBounds = null;
+        }, GESTURE_END);
+
+        // A NEW PUSH arriving inside a continuing stream: clearly risen out of
+        // the decay, so the previous push's spend no longer applies. The new
+        // one must earn its own SWIPE_DISTANCE from here.
+        const mag = Math.max(Math.abs(event.deltaX), Math.abs(event.deltaY));
+        if (mag >= PUSH_MIN && mag > lastMag * PUSH_RISE) {
+          stepped = false;
+          sumX = 0;
+          sumY = 0;
+        }
+        // Bookkeeping before any of the gates — an event that bails out at the
+        // boundary check below still belongs to the gesture.
+        lastMag = mag;
+
+        // The stack runs sideways, so a sideways wheel drives it — but so does a
+        // vertical one, because that is the axis most people scroll with
+        // whatever is on the page. Whichever has travelled further is the one
+        // that means it.
+        sumX += event.deltaX;
+        sumY += event.deltaY;
+        const travel = Math.abs(sumX) > Math.abs(sumY) ? sumX : sumY;
+
+        // Captured when the gesture STARTS and held for its duration: otherwise
+        // advancing onto a narrower photograph mid-flick pulls the boundary out
+        // from under the pointer and hands the rest of the gesture to the page.
+        if (!gestureBounds) gestureBounds = stackBounds();
+        if (event.clientX < gestureBounds.left || event.clientX > gestureBounds.right) return;
+
+        event.preventDefault();
+
+        if (stepped || Math.abs(travel) < SWIPE_DISTANCE) return;
+        stepped = true; // spent — cleared by silence above, or by the next clear rise
+        const now = performance.now();
+        if (now - lastStep < STEP_FLOOR) return; // held: too soon after the last one
+        lastStep = now;
+        go(active + (travel > 0 ? 1 : -1));
+      },
+      { passive: false },
+    );
+
+    // Placement is measured, so it has to be re-measured when the box changes.
+    const onResize = () => render();
+    window.addEventListener('resize', onResize);
+    document.addEventListener('astro:before-swap', () => window.removeEventListener('resize', onResize), {
+      once: true,
+    });
+
+    // Dev-only recorder, mirroring the index carousel's. Writes to localStorage
+    // as well as memory, so a real gesture can be read back from any tab on
+    // localhost rather than copied out of a console.
+    if (import.meta.env.DEV) {
+      const log: string[] = [];
+      const t0 = performance.now();
+      let saveTimer = 0;
+      const save = () => {
+        window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(() => {
+          try {
+            localStorage.setItem('pj:stack', log.join('\n'));
+          } catch {
+            /* no matter */
+          }
+        }, 400);
+      };
+      stage.addEventListener(
+        'wheel',
+        (e) => {
+          log.push(
+            `${(performance.now() - t0).toFixed(0).padStart(6)}  wheel dx=${e.deltaX.toFixed(1)} ` +
+              `dy=${e.deltaY.toFixed(1)} ${e.defaultPrevented ? 'CLAIMED' : 'fell through'} ` +
+              `photo=${indexOut?.textContent}`,
+          );
+          if (log.length > 400) log.shift();
+          save();
+        },
+        { passive: true }, // after the real handler, so defaultPrevented is set
+      );
+      (window as unknown as { __stack: () => string }).__stack = () => {
+        const report = log.join('\n');
+        // eslint-disable-next-line no-console
+        console.log(report);
+        return `${log.length} lines recorded`;
+      };
+    }
+
+    render();
+  }
+
+  document.addEventListener('astro:page-load', initStack);
+</script>
+
+<style>
+  .chapter {
+    /* Everything on the page that ISN'T the stage: the site header, the title
+       block, the caption line, the controls and the ruler. The card is sized
+       from whatever is left, so the whole chapter lands inside the first screen.
+       Re-measure this if the title block or the ruler changes — measured at
+       25.6rem on a 912px viewport, with the rest left as slack. */
+    --chrome: 27rem;
+    /* The widest photograph plus the slivers behind it — the assembly's full
+       reach, set per chapter from the frontmatter. */
+    --card-h: clamp(
+      8rem,
+      min(
+        calc(100svh - var(--chrome)),
+        calc((100vw - var(--container-padding) * 2) / var(--reach))
+      ),
+      34rem
+    );
+    /* The GATE is what snaps — one photograph per gesture. The movement itself
+       is soft: --ease-standard eases in and out, which is what made the
+       original 520ms feel unhurried. Slowed from 480ms on request — these are
+       holiday photographs, not a to-do list. STEP_FLOOR in the script must
+       stay longer than this, so a photograph always finishes arriving. */
+    --card-settle: 640ms;
+
+    background: var(--color-bg);
+    color: var(--color-ink);
+    padding-bottom: var(--space-8);
+  }
+
+  .chapter__head {
+    padding-block: var(--space-12) var(--space-6);
+  }
+
+  .chapter__title {
+    font-size: var(--text-2xl);
+  }
+
+  .chapter__count {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    padding-top: var(--space-2);
+  }
+
+  /* The chapter's earth tone, used once as a rule under the title — enough to
+     colour the page without ever sitting behind a photograph. */
+  .chapter__rule {
+    border: 0;
+    height: 2px;
+    background: var(--tint);
+    margin-top: var(--space-4);
+  }
+
+  .chapter__intro {
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    color: var(--color-ink);
+    max-width: var(--text-measure);
+    padding-top: var(--space-6);
+  }
+
+  /* --- The stack ------------------------------------------------------- */
+  /* The stage is exactly one card tall — the recession runs sideways now, so
+     there is no headroom to leave above it. */
+  .stack__stage {
+    position: relative;
+    height: var(--card-h);
+    overflow: hidden;
+    margin-top: var(--space-6);
+  }
+
+  .stack__stage:focus-visible {
+    outline: 1px solid rgba(242, 237, 225, 0.4);
+    outline-offset: 4px;
+  }
+
+  .stack__cards {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Every card is the full height of the stage and takes its width from its own
+     photograph. Scaling about the left-centre keeps them all on one horizontal
+     axis; --x and --s are set from measured widths in the script. */
+  .card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--card-h) * var(--ar));
+    height: var(--card-h);
+    transform-origin: 0% 50%;
+    transform: translateX(var(--x, 0px)) scale(var(--s, 1));
+    transition:
+      transform var(--card-settle) var(--ease-standard),
+      clip-path var(--card-settle) var(--ease-standard),
+      opacity var(--card-settle) var(--ease-standard);
+  }
+
+  .card__button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--tint);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  /* The card's box already carries the photograph's exact ratio, so this fills
+     it without trimming anything. */
+  .card :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card[data-depth='near'],
+  .card[data-depth='far'],
+  .card[data-depth='past'] {
+    pointer-events: none;
+  }
+
+  /* Skipped entirely — otherwise every photograph in the chapter would count as
+     on-screen and be downloaded at once. */
+  .card[data-depth='far'] {
+    content-visibility: hidden;
+  }
+
+  /* --- Caption ---------------------------------------------------------- */
+  .stack__meta {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--space-8);
+    align-items: baseline;
+    padding-top: var(--space-6);
+    min-height: var(--space-12);
+  }
+
+  .stack__index {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+
+  .stack__caption {
+    font-size: var(--text-sm);
+    line-height: 1.75;
+    color: var(--color-ink);
+    max-width: 46rem;
+  }
+
+  /* --- Controls --------------------------------------------------------- */
+  .stack__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding-top: var(--space-6);
+  }
+
+  .stack__arrow {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: rgba(242, 237, 225, 0.1);
+    color: var(--color-ink);
+    transition: background var(--duration-fast) var(--ease-standard);
+  }
+
+  .stack__arrow:hover {
+    background: rgba(242, 237, 225, 0.22);
+  }
+
+  .stack__arrow svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .stack__progress {
+    flex: 1 1 auto;
+    height: 2px;
+    background: rgba(242, 237, 225, 0.16);
+  }
+
+  .stack__progress span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--color-ink);
+    transition: width var(--card-settle) var(--ease-standard);
+  }
+
+  /* --- The running order ------------------------------------------------ */
+  /* One frame per photograph, drawn at its own proportions, so the shape of the
+     chapter is legible before you walk it. */
+  .stack__ruler {
+    /* One row, always — see the note in the frontmatter. */
+    --tick-h: clamp(
+      0.4rem,
+      calc(
+        (100vw - var(--container-padding) * 2 - var(--ruler-gaps)) / var(--ruler-sum)
+      ),
+      1.375rem
+    );
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 5px;
+    padding-top: var(--space-6);
+    min-height: calc(1.375rem + var(--space-6));
+  }
+
+  .stack__tick {
+    flex: 0 0 auto;
+    height: var(--tick-h);
+    width: calc(var(--tick-h) * var(--ar));
+    border: 1px solid rgba(242, 237, 225, 0.45);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      background var(--duration-fast) var(--ease-standard),
+      border-color var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+  }
+
+  .stack__tick:hover {
+    border-color: var(--color-ink);
+    transform: translateY(-2px);
+  }
+
+  .stack__tick[aria-current='true'] {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+
+  /* A hairline wherever the frame shape changes. */
+  .stack__tick[data-break] {
+    margin-left: 10px;
+    position: relative;
+  }
+
+  .stack__tick[data-break]::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: -2px;
+    bottom: -2px;
+    width: 1px;
+    background: var(--color-hairline);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card,
+    .stack__progress span,
+    .stack__tick {
+      transition: none;
+    }
+  }
+</style>

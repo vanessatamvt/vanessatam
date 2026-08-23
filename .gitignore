@@ -25,3 +25,12 @@ pnpm-debug.log*
 
 # local Claude Code permission settings (machine-specific)
 .claude/settings.local.json
+
+# raw source images (not used by the site, kept locally only)
+/Original Project Images/
+/Photo Journal Originals/
+
+# scratch/preview files
+.tmp_claude_preview/
+scripts/__pycache__/
+**/__pycache__/

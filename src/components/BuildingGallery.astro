@@ -1,0 +1,421 @@
+---
+// "Explore the Building" showcase gallery — a centered-peek carousel of the
+// finished building, modelled on the "Explore Our Hotel" module on Hyatt
+// property pages (centered feature slide flanked by peeking neighbours, a
+// caption bottom-left, and prev/next arrows with an "n / total" counter
+// bottom-right). Styled with the site's own tokens so it reads as part of
+// Vanessa's portfolio rather than a pasted-in widget.
+// The slides are browsed by dragging the reel sideways (press and hold, then
+// move) or with the arrows — deliberately NOT click-to-zoom, so a press on a
+// photo always means "scroll" and never opens anything.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface GalleryImage {
+  src: ImageMetadata;
+  caption?: string;
+}
+interface Props {
+  images?: GalleryImage[];
+  title?: string;
+  /** Landscape slides (3:2) instead of the default portrait (3:4) boxes —
+   *  for projects whose showcase images are horizontal (e.g. renderings). */
+  landscape?: boolean;
+  /** Mixed orientation: each slide sizes to its own image aspect ratio at a
+   *  shared height, so portrait and landscape photos share one carousel
+   *  uncropped. Overrides the uniform `landscape`/portrait slide box. */
+  mixed?: boolean;
+  /** Attribution for this reel only, when its photography comes from a
+   *  different source than the rest of the project's imagery. */
+  credit?: string;
+}
+const { images = [], title = 'Explore the Building', landscape = false, mixed = false, credit } = Astro.props;
+---
+
+{
+  images.length > 0 && (
+    <section class:list={['building-gallery', { 'building-gallery--landscape': landscape, 'building-gallery--mixed': mixed }]} data-building-gallery>
+      <h2 class="building-gallery__title">{title}</h2>
+
+      <div class="building-gallery__viewport">
+        <ul class="building-gallery__track" data-bg-track>
+          {images.map((img, i) => {
+            const wide = img.src.width >= img.src.height;
+            // Mixed slides follow the image's true ratio; uniform slides use the
+            // landscape/portrait box. `wide` also picks the srcset candidates.
+            const useWide = mixed ? wide : landscape;
+            return (
+              <li
+                class="building-gallery__slide"
+                data-bg-slide
+                data-index={i}
+                style={mixed ? `--ar:${img.src.width / img.src.height}` : undefined}
+              >
+                <figure class="building-gallery__figure">
+                  <Image
+                    class="building-gallery__img"
+                    src={img.src}
+                    alt={img.caption ?? ''}
+                    widths={useWide ? [640, 1100, 1600] : [460, 900, 1400]}
+                    sizes={useWide ? '(min-width: 48rem) 52rem, 92vw' : '(min-width: 48rem) 33rem, 80vw'}
+                    loading="lazy"
+                    decoding="async"
+                    data-bg-caption={img.caption ?? ''}
+                  />
+                </figure>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div class="container building-gallery__bar">
+        <p class="building-gallery__caption" data-bg-current-caption>
+          {images[0].caption ?? ''}
+        </p>
+        <div class="building-gallery__controls">
+          <button type="button" class="building-gallery__arrow" data-bg-prev aria-label="Previous image">
+            <span aria-hidden="true">&#8249;</span>
+          </button>
+          <span class="building-gallery__counter" data-bg-counter>1 / {images.length}</span>
+          <button type="button" class="building-gallery__arrow" data-bg-next aria-label="Next image">
+            <span aria-hidden="true">&#8250;</span>
+          </button>
+        </div>
+      </div>
+
+      {credit && <p class="container building-gallery__credit">{credit}</p>}
+    </section>
+  )
+}
+
+<style>
+  .building-gallery {
+    padding-block: var(--space-24) var(--space-16);
+  }
+
+  /* Centered, wide-tracked heading — the module's anchor, echoing the Hyatt
+     "EXPLORE OUR HOTEL" title but in the site's own Archivo/ink palette. */
+  .building-gallery__title {
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    margin-bottom: var(--space-12);
+  }
+
+  /* The viewport is full-bleed so neighbouring slides "peek" past the left and
+     right edges exactly like the reference carousel. */
+  .building-gallery__viewport {
+    width: 100%;
+  }
+
+  .building-gallery__track {
+    /* Portrait slide box: a fixed 3:4 card. --slide-h drives everything; the
+       width follows so the aspect ratio is always exactly portrait. */
+    --slide-h: clamp(24rem, 74vh, 44rem);
+    --slide-w: calc(var(--slide-h) * 3 / 4);
+
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: var(--space-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    /* The reel is dragged, so the cursor advertises that and text selection is
+       off (otherwise a drag paints a selection highlight across the slides). */
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Snapping has to be off *during* a drag, or every pixel of movement fights
+     the snap points; it's restored on release, which settles the reel on the
+     nearest slide. */
+  .building-gallery.is-dragging .building-gallery__track {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+
+  /* Landscape variant: 3:2 slides for horizontal images (renderings). Still
+     height-driven like the portrait case, just a landscape ratio and a shorter
+     height so the wider slide still leaves room for the peeking neighbours. */
+  .building-gallery--landscape .building-gallery__track {
+    --slide-h: clamp(14rem, 50vh, 30rem);
+    --slide-w: calc(var(--slide-h) * 3 / 2);
+  }
+
+  /* Mixed variant: shared slide HEIGHT, per-slide WIDTH from each image's own
+     aspect ratio (--ar, set inline). Portrait and landscape photos then sit in
+     one carousel, each uncropped. */
+  .building-gallery--mixed .building-gallery__track {
+    --slide-h: clamp(18rem, 60vh, 34rem);
+  }
+  .building-gallery--mixed .building-gallery__slide {
+    flex: 0 0 auto;
+  }
+  .building-gallery--mixed .building-gallery__figure {
+    width: calc(var(--slide-h) * var(--ar, 1.5));
+  }
+  /* --slide-w is undefined in mixed mode, so the uniform spacer calc collapses;
+     use half-viewport spacers so the first/last slide can still centre. */
+  .building-gallery--mixed .building-gallery__track::before,
+  .building-gallery--mixed .building-gallery__track::after {
+    flex: 0 0 50%;
+  }
+
+  .building-gallery__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Spacers so the first and last slides can sit dead-centre in the viewport
+     (the "peek" carousel look), regardless of how many images there are. */
+  .building-gallery__track::before,
+  .building-gallery__track::after {
+    content: '';
+    flex: 0 0 calc(50% - var(--slide-w) / 2 - var(--space-4));
+  }
+
+  .building-gallery__slide {
+    flex: 0 0 var(--slide-w);
+    scroll-snap-align: center;
+  }
+
+  .building-gallery__figure {
+    position: relative;
+    height: var(--slide-h);
+    margin: 0;
+    overflow: hidden;
+    background: var(--color-hairline);
+  }
+
+  .building-gallery__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    /* Without this, pressing on a photo starts the browser's native image drag
+       (a ghost copy following the cursor) and the reel never scrolls. The
+       dragstart guard in the script covers Firefox, which ignores this. */
+    -webkit-user-drag: none;
+    /* Neighbours read a touch quieter than the centred slide; JS toggles
+       is-active on the slide nearest centre. */
+    opacity: 0.55;
+    transition: opacity var(--duration-base) var(--ease-standard);
+  }
+
+  .building-gallery__slide.is-active .building-gallery__img {
+    opacity: 1;
+  }
+
+  /* Caption + controls bar, on the site's normal container gutters. */
+  .building-gallery__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding-top: var(--space-6);
+  }
+
+  .building-gallery__caption {
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    min-height: 1.2em;
+  }
+
+  .building-gallery__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-shrink: 0;
+  }
+
+  .building-gallery__counter {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    letter-spacing: 0.08em;
+    min-width: 3.5rem;
+    text-align: center;
+  }
+
+  .building-gallery__arrow {
+    background: transparent;
+    border: none;
+    color: var(--color-ink);
+    font-size: var(--text-xl);
+    line-height: 1;
+    padding: var(--space-1) var(--space-2);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .building-gallery__arrow:hover {
+    color: var(--color-accent);
+  }
+
+  /* Right-aligned and quiet, matching the project brief's credit line — this
+     reel's photography has a different source from the rest of the page. */
+  .building-gallery__credit {
+    padding-top: var(--space-4);
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+  }
+
+  @media (max-width: 40rem) {
+    .building-gallery__title {
+      font-size: var(--text-xl);
+      margin-bottom: var(--space-8);
+    }
+    .building-gallery__track {
+      --slide-h: clamp(20rem, 62vh, 30rem);
+    }
+    /* Landscape on phones: size by width (~84vw) so the wide 3:2 slide fits
+       the screen with a small peek, instead of overflowing off both sides. */
+    .building-gallery--landscape .building-gallery__track {
+      --slide-h: 56vw;
+    }
+    /* Mixed on phones: a moderate shared height so portrait slides aren't
+       towering and landscape slides still leave room for the peek. */
+    .building-gallery--mixed .building-gallery__track {
+      --slide-h: clamp(15rem, 46vh, 24rem);
+    }
+    /* On phones the centred slide reads fine with the neighbours less dimmed. */
+    .building-gallery__img {
+      opacity: 0.85;
+    }
+  }
+</style>
+
+<script>
+  // Peek-carousel behaviour: active-slide tracking, arrow navigation, and
+  // press-and-drag horizontal scrolling. Rebinds on every astro:page-load so it
+  // survives the site's View Transitions (ClientRouter) swaps, not just the
+  // first hard load.
+  function initBuildingGallery(root: HTMLElement) {
+    const track = root.querySelector<HTMLElement>('[data-bg-track]');
+    const slides = Array.from(root.querySelectorAll<HTMLElement>('[data-bg-slide]'));
+    const captionEl = root.querySelector<HTMLElement>('[data-bg-current-caption]');
+    const counterEl = root.querySelector<HTMLElement>('[data-bg-counter]');
+    const prevBtn = root.querySelector<HTMLButtonElement>('[data-bg-prev]');
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-bg-next]');
+    if (!track || slides.length === 0) return;
+
+    let activeIndex = 0;
+
+    // The active slide is whichever one's centre is closest to the viewport's
+    // centre — robust to variable slide widths and momentum scrolling.
+    function nearestIndex(): number {
+      const mid = track!.scrollLeft + track!.clientWidth / 2;
+      let best = 0;
+      let bestDist = Infinity;
+      slides.forEach((slide, i) => {
+        const c = slide.offsetLeft + slide.offsetWidth / 2;
+        const d = Math.abs(c - mid);
+        if (d < bestDist) {
+          bestDist = d;
+          best = i;
+        }
+      });
+      return best;
+    }
+
+    function setActive(i: number) {
+      activeIndex = i;
+      slides.forEach((slide, idx) => slide.classList.toggle('is-active', idx === i));
+      const img = slides[i].querySelector<HTMLImageElement>('.building-gallery__img');
+      if (captionEl) captionEl.textContent = img?.dataset.bgCaption ?? '';
+      if (counterEl) counterEl.textContent = `${i + 1} / ${slides.length}`;
+    }
+
+    function centreOn(i: number, smooth = true) {
+      const clamped = Math.max(0, Math.min(slides.length - 1, i));
+      const slide = slides[clamped];
+      const left = slide.offsetLeft - (track!.clientWidth - slide.offsetWidth) / 2;
+      track!.scrollTo({ left, behavior: smooth ? 'smooth' : 'auto' });
+    }
+
+    let raf = 0;
+    track.addEventListener('scroll', () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const i = nearestIndex();
+        if (i !== activeIndex) setActive(i);
+      });
+    });
+
+    prevBtn?.addEventListener('click', () => centreOn(activeIndex - 1));
+    nextBtn?.addEventListener('click', () => centreOn(activeIndex + 1));
+
+    // ---- Press-and-drag horizontal scrolling ---------------------------
+    // The slides are <img> elements, which the browser will happily drag as
+    // files/images of their own — that native gesture has to be cancelled or it
+    // pre-empts everything below (Firefox ignores the CSS -webkit-user-drag
+    // rule, so this listener is the cross-browser stop).
+    track.addEventListener('dragstart', (e) => e.preventDefault());
+
+    // A real drag is only recognized past a small threshold, so a stray
+    // pixel of movement on an ordinary press doesn't yank the reel.
+    const DRAG_THRESHOLD = 6;
+    let isDown = false;
+    let dragging = false;
+    let startX = 0;
+    let startScroll = 0;
+
+    track.addEventListener('pointerdown', (e) => {
+      isDown = true;
+      dragging = false;
+      startX = e.clientX;
+      startScroll = track!.scrollLeft;
+    });
+
+    track.addEventListener('pointermove', (e) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      if (!dragging && Math.abs(dx) > DRAG_THRESHOLD) {
+        dragging = true;
+        root.classList.add('is-dragging');
+        // Capturing keeps the gesture alive when the pointer leaves the reel
+        // mid-drag (e.g. dragging up past the images).
+        track!.setPointerCapture(e.pointerId);
+      }
+      if (dragging) track!.scrollLeft = startScroll - dx;
+    });
+
+    const stopDrag = () => {
+      if (!isDown) return;
+      isDown = false;
+      if (dragging) {
+        // Dropping is-dragging restores scroll-snap; centring on whatever
+        // ended up nearest makes that settle deterministic rather than
+        // leaving it to each browser's re-snap behaviour.
+        root.classList.remove('is-dragging');
+        centreOn(nearestIndex());
+      }
+      dragging = false;
+    };
+    track.addEventListener('pointerup', stopDrag);
+    track.addEventListener('pointercancel', stopDrag);
+
+    // Start centred on the first slide.
+    setActive(0);
+    centreOn(0, false);
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document
+      .querySelectorAll<HTMLElement>('[data-building-gallery]')
+      .forEach((root) => initBuildingGallery(root));
+  });
+</script>
+

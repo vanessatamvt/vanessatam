@@ -10,6 +10,15 @@ html {
   color-scheme: light;
 }
 
+/* Set by BaseLayout's `theme` prop. body already paints itself from
+   --color-bg / --color-ink, so re-pointing those tokens (tokens.css) is all
+   the page itself needs; this is here so the browser's own furniture —
+   scrollbars, form controls, the overscroll gutter — comes through dark too
+   rather than flashing cream at the edges of a dark page. */
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);

@@ -34,6 +34,21 @@ const { projects } = Astro.props;
     padding-block: var(--space-8);
     cursor: grab;
     scrollbar-width: none;
+    /* Press-and-drag on this rail means "scroll", so both browser defaults
+       that would otherwise claim that gesture are suppressed: text selection
+       (which paints a highlight across the captions mid-drag) and, below,
+       native drag-and-drop. */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Each card is an <a> wrapping an <img> — both natively draggable, so
+     pressing on a project photo would start a ghost-image drag and the
+     pointer never reaches the scroll handler. Firefox ignores this property,
+     hence the dragstart guard in the script below as well. */
+  .project-gallery__rail :global(a),
+  .project-gallery__rail :global(img) {
+    -webkit-user-drag: none;
   }
 
   .project-gallery__rail::-webkit-scrollbar {
@@ -47,6 +62,24 @@ const { projects } = Astro.props;
 </style>
 
 <script>
+  const STORAGE_KEY = 'gallery-scroll-left';
+
+  // Runs ONCE per real document load — Astro's ClientRouter swaps pages inside
+  // the same document, so this does not re-run when navigating within the site.
+  //
+  // That distinction is the whole point: a remembered rail position should only
+  // survive a trip into a project and back, never a fresh arrival. On a first
+  // visit or a refresh the gallery must open on the newest work, so anything
+  // left over from a previous session is cleared here. "back_forward" is left
+  // alone — that IS the reader returning, which is what the memory is for.
+  try {
+    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    if (!nav || nav.type !== 'back_forward') sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Private-browsing modes can throw on storage access; opening at the start
+    // of the rail is the safe default anyway.
+  }
+
   function bindGallery() {
     const rail = document.querySelector<HTMLElement>('[data-gallery-rail]');
     if (!rail) return;
@@ -62,6 +95,14 @@ const { projects } = Astro.props;
     // ordinary clicks on the project links inside each card, since pointer
     // capture reroutes the events a click is synthesized from.
     const DRAG_THRESHOLD = 6;
+
+    // The cross-browser half of the -webkit-user-drag rule in the styles above
+    // (Firefox ignores that property): without this, pressing and holding on a
+    // card's photo starts the browser's own image/link drag — you get a
+    // translucent copy of the photo following the cursor — and the pointermove
+    // handler below never sees the gesture, so the rail doesn't scroll.
+    rail.addEventListener('dragstart', (e) => e.preventDefault());
+
     let isDown = false;
     let dragging = false;
     let startX = 0;
@@ -102,6 +143,54 @@ const { projects } = Astro.props;
     };
     rail.addEventListener('pointerup', stopDrag);
     rail.addEventListener('pointercancel', stopDrag);
+
+    // ---- Remember where the rail was left ------------------------------
+    // Clicking into a project and coming back re-renders the home page from
+    // scratch, so the rail would otherwise snap back to card 01 and lose the
+    // reader's place halfway down the gallery. The last position is stashed
+    // per browser tab and put back on arrival.
+    //
+    // sessionStorage rather than localStorage on purpose: "where I was" should
+    // survive navigating within a visit, but a visit tomorrow should open on
+    // the first project rather than mid-reel with no memory of why.
+
+    let saveFrame = 0;
+    rail.addEventListener('scroll', () => {
+      if (saveFrame) return;
+      saveFrame = requestAnimationFrame(() => {
+        saveFrame = 0;
+        try {
+          sessionStorage.setItem(STORAGE_KEY, String(rail.scrollLeft));
+        } catch {
+          // Private-browsing modes can throw on write; losing the position is
+          // not worth breaking the gallery over.
+        }
+      });
+    });
+
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage.getItem(STORAGE_KEY);
+    } catch {
+      saved = null;
+    }
+    if (saved) {
+      const left = Number(saved);
+      // Snapping fights an assignment made mid-layout, so it's suspended for
+      // the one frame the restore happens in — same trick the drag uses.
+      const restore = () => {
+        rail.classList.add('is-dragging');
+        rail.scrollLeft = left;
+        requestAnimationFrame(() => rail.classList.remove('is-dragging'));
+      };
+      restore();
+      // The cards carry explicit width/height so layout is stable immediately,
+      // but fonts and the responsive image srcset can still settle a beat
+      // later; re-applying once the page has fully loaded covers that.
+      if (document.readyState !== 'complete') {
+        window.addEventListener('load', restore, { once: true });
+      }
+    }
   }
 
   document.addEventListener('astro:page-load', bindGallery);

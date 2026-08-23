@@ -1,0 +1,283 @@
+---
+// A working page, not a public one: every photograph in the journal at thumbnail
+// size with its filename, so captions can be chosen by looking rather than by
+// guessing at file names. Click any tile to copy its filename to the clipboard,
+// then paste it into the matching chapter's `captions` in
+// src/data/photo-journal.ts.
+//
+// Not linked from anywhere in the site — reach it directly at
+// /photo-journal/contact-sheet.
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { loadChapters } from '../../lib/photo-journal';
+
+const chapters = loadChapters();
+const total = chapters.reduce((n, c) => n + c.count, 0);
+const captioned = chapters.reduce(
+  (n, c) => n + c.photos.filter((p) => p.caption).length,
+  0,
+);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<BaseLayout
+  title="Contact Sheet — Photo-Journal"
+  description="Working index of every photograph in the journal."
+  headerVariant="project"
+  backLabel="Photo-Journal"
+  backHref="/photo-journal"
+>
+  <article class="sheet">
+    <section class="container sheet__head">
+      <h1 class="sheet__title">Contact Sheet</h1>
+      <p class="sheet__note">
+        {total} photographs · {captioned} captioned. Click a frame to copy its filename.
+      </p>
+      <hr class="sheet__rule" />
+      <p class="sheet__how">
+        To caption one, open <code>src/data/photo-journal.ts</code>, find that chapter,
+        and add the filename to its <code>captions</code>:
+      </p>
+      <pre class="sheet__code">{`{
+  folder: 'Iceland',
+  captions: {
+    'DSCF6741.JPEG': 'Two sentences on what you were thinking here.',
+  },
+}`}</pre>
+      <p class="sheet__how">
+        A captioned photograph automatically takes a row to itself on its chapter page.
+      </p>
+    </section>
+
+    {
+      chapters.map((chapter) => (
+        <section class="container sheet__chapter" style={`--tint:${chapter.tint}`}>
+          <header class="sheet__chapter-head">
+            <h2 class="sheet__chapter-name">{chapter.folder}</h2>
+            <span class="sheet__chapter-meta">
+              {chapter.count} · <code>{chapter.folder}</code>
+            </span>
+          </header>
+
+          <ul class="sheet__grid">
+            {chapter.photos.map((photo, i) => (
+              <li class:list={['tile', { 'tile--captioned': !!photo.caption }]}>
+                <button class="tile__button" type="button" data-file={photo.file}>
+                  <span class="tile__frame">
+                    <Image
+                      src={photo.src}
+                      alt=""
+                      widths={[220, 440]}
+                      sizes="220px"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
+                  <span class="tile__index">{pad(i + 1)}</span>
+                  <span class="tile__file">{photo.file}</span>
+                  {photo.caption && <span class="tile__flag">captioned</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </article>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</BaseLayout>
+
+<script>
+  const toast = document.getElementById('toast');
+  let timer: number | undefined;
+
+  document.querySelectorAll<HTMLButtonElement>('.tile__button').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const file = button.dataset.file ?? '';
+      try {
+        await navigator.clipboard.writeText(file);
+        show(`Copied  ${file}`);
+      } catch {
+        show(file);
+      }
+    });
+  });
+
+  function show(message: string) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.dataset.visible = 'true';
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => delete toast.dataset.visible, 1800);
+  }
+</script>
+
+<style>
+  .sheet {
+    background: #171614;
+    color: #f2ede1;
+    padding-bottom: var(--space-24);
+  }
+
+  .sheet__head {
+    padding-block: var(--space-16) var(--space-12);
+  }
+
+  .sheet__title {
+    font-size: var(--text-2xl);
+  }
+
+  .sheet__note {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a99f8e;
+    padding-top: var(--space-2);
+  }
+
+  .sheet__rule {
+    border: 0;
+    height: 2px;
+    background: #6b5f52;
+    margin-top: var(--space-6);
+  }
+
+  .sheet__how {
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: #cfc7b8;
+    max-width: 46rem;
+    padding-top: var(--space-6);
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: #e6dfd0;
+  }
+
+  .sheet__code {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.7;
+    color: #cfc7b8;
+    background: #201e1b;
+    border-left: 2px solid #6b5f52;
+    padding: var(--space-4) var(--space-6);
+    margin-top: var(--space-4);
+    overflow-x: auto;
+    max-width: 46rem;
+  }
+
+  .sheet__chapter {
+    padding-top: var(--space-16);
+  }
+
+  .sheet__chapter-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-4) var(--space-6);
+    border-bottom: 1px solid rgba(242, 237, 225, 0.14);
+    padding-bottom: var(--space-3);
+  }
+
+  .sheet__chapter-name {
+    font-size: var(--text-xl);
+  }
+
+  .sheet__chapter-meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a99f8e;
+  }
+
+  .sheet__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: var(--space-8) var(--space-6);
+    padding-top: var(--space-8);
+  }
+
+  .tile__button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .tile__frame {
+    display: block;
+    aspect-ratio: 1;
+    background: var(--tint);
+    overflow: hidden;
+  }
+
+  .tile__frame :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .tile__button:hover .tile__frame :global(img) {
+    opacity: 0.72;
+  }
+
+  .tile__index,
+  .tile__file,
+  .tile__flag {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+  }
+
+  .tile__index {
+    color: #8d8578;
+    padding-top: var(--space-2);
+  }
+
+  .tile__file {
+    color: #cfc7b8;
+    word-break: break-all;
+  }
+
+  .tile__flag {
+    color: #b25133;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding-top: var(--space-1);
+  }
+
+  .tile--captioned .tile__frame {
+    outline: 2px solid #b25133;
+    outline-offset: 2px;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: var(--space-8);
+    transform: translate(-50%, 1rem);
+    background: #f2ede1;
+    color: #171614;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    padding: var(--space-3) var(--space-6);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--duration-fast) var(--ease-standard),
+      transform var(--duration-fast) var(--ease-standard);
+  }
+
+  .toast[data-visible] {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+</style>

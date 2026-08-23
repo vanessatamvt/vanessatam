@@ -10,14 +10,96 @@ import type { ImageMetadata } from 'astro';
 interface SectionImage {
   src: ImageMetadata;
   caption?: string;
+  /** Leader-line callouts drawn over the image; x/y are percentages of the
+   *  image, so they track the drawing at any rendered size. */
+  annotations?: { text: string; x: number; y: number }[];
 }
 interface Props {
   images?: SectionImage[];
   sharedCaption?: string;
+  /** Enable click-to-zoom on this section's images. Defaults to true so the
+   *  photography page keeps its lightbox; project pages pass their own
+   *  `imageZoom` frontmatter value, which is off unless set. Dropping the
+   *  js-zoomable class removes BOTH the zoom cursor and the click binding,
+   *  since the stylesheet and the script both key off it. */
+  zoom?: boolean;
   text?: string;
+  /** Booklet-grid row: hairline 4px gutters, Behance-style. */
+  grid?: boolean;
+  /** Inset centered row (~86% width) — Behance's smaller 2-up rows. */
+  narrow?: boolean;
+  /** Render `text` a size down — for long paragraphs, so they don't compete
+   *  with short chapter/divider labels at the same default size. */
+  smallText?: boolean;
+  /** Render `text` like a photo caption — for reference/meta copy (e.g. a
+   *  closing bibliography) rather than narrative body text. */
+  captionText?: boolean;
+  /** A standalone embedded video (YouTube URL) — put it in its own section
+   *  with no `images` to place it between other sections. */
+  video?: string;
+  /** Render the video full container width (a "banner" that lines up with the
+   *  text/fact-row margins) instead of the default 60% centered box, and have
+   *  it autoplay (muted) when scrolled into view rather than on click. */
+  videoBanner?: boolean;
+  /** Autoplay the video (muted) when scrolled into view, independent of
+   *  `videoBanner`'s width change — for a video that should still play on
+   *  scroll but stay in the default centered box rather than going full
+   *  width. Defaults to whatever `videoBanner` is, since that's always
+   *  meant to autoplay; set this explicitly to autoplay without the banner
+   *  treatment. */
+  autoplay?: boolean;
+  /** For a section with exactly one image: render it at one row-slot's width
+   *  (roughly half the container, left-aligned) instead of the default
+   *  full-width single figure — so a trailing odd photo (e.g. the last item
+   *  in a "2 per row" sequence) reads at the same height as the 2-up rows
+   *  above it, rather than blowing up to a much taller full-width image. */
+  compact?: boolean;
+  /** A short line rendered directly beneath `text`, tightly spaced (not the
+   *  usual section-to-section gap) and smaller than a photo caption — for
+   *  something like a disclaimer that belongs right under a subheading, not
+   *  floating a whole section-padding's distance away from it. */
+  note?: string;
 }
-const { images = [], sharedCaption, text } = Astro.props;
+const {
+  images = [],
+  sharedCaption,
+  zoom = true,
+  text,
+  grid = false,
+  narrow = false,
+  smallText = false,
+  captionText = false,
+  video,
+  videoBanner = false,
+  autoplay,
+  compact = false,
+  note,
+} = Astro.props;
+const shouldAutoplay = autoplay ?? videoBanner;
 const sizesFor = (count: number) => `(min-width: 48rem) ${Math.round(100 / count)}vw, 100vw`;
+// A compact single image is styled to occupy one slot of a 2-up row, so it
+// should request image resolution as if it were in a 2-image row, not a
+// full-width (1-image) row.
+const isCompactSingle = images.length === 1 && compact;
+
+// An annotated drawing needs a label column beside it, so it ignores `compact`
+// and takes the full content width. IMG_W is the share of that width given to
+// the image; annotation x-percentages are in IMAGE space, so they're scaled by
+// it to become percentages of the whole figure.
+const annotations = images.length === 1 ? (images[0].annotations ?? []) : [];
+const isAnnotated = annotations.length > 0;
+const IMG_W = 72;
+// Labels start at a HARD column edge, never a flexible one. Sizing them by
+// content let a long label grow leftwards and sit on top of the drawing; with a
+// fixed left edge the text can only ever wrap inside its own column.
+//
+// Every leader line ends at the same fixed column (LABEL_X, a percentage of
+// the whole figure) instead of stretching out to meet each label wherever its
+// own text width happens to land — so the lines read as one consistent length
+// and every label starts flush at the same x, in a clean left-aligned column.
+// Set to match where "Classrooms and Live-Demonstration Lab" (the longest
+// label) naturally sits.
+const LABEL_X = 78;
 // Equal-height, no-crop side-by-side rows: each figure's flex-grow is set to
 // its image's aspect ratio (w/h) with a flex-basis of 0, so figure widths
 // come out exactly proportional to aspect ratio. Each image is width:100%
@@ -25,19 +107,117 @@ const sizesFor = (count: number) => `(min-width: 48rem) ${Math.round(100 / count
 // a constant that's identical for every image in the row — no fixed-height
 // box and no object-fit cropping needed. The images just naturally line up.
 const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
+
+// Accepts youtu.be/<id>, youtube.com/watch?v=<id>, or youtube.com/embed/<id>
+// and returns just the bare video ID, or null if `video` isn't a recognizable
+// YouTube URL.
+function youtubeId(url?: string): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname === 'youtu.be') return u.pathname.slice(1) || null;
+    if (u.hostname.endsWith('youtube.com')) {
+      const v = u.searchParams.get('v');
+      if (v) return v;
+      const match = u.pathname.match(/\/embed\/([^/?]+)/);
+      if (match) return match[1];
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+const videoId = youtubeId(video);
 ---
 
-<section class="project-section">
+<section class:list={['project-section', { 'project-section--annotated': isAnnotated }]}>
   <div class="container">
-    {images.length === 0 && text && <p class="project-section__text">{text}</p>}
+    {
+      videoId && (
+        <div class:list={['project-section__video', { 'project-section__video--banner': videoBanner }]}>
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&playsinline=1&rel=0${shouldAutoplay ? '&mute=1' : ''}`}
+            title="Embedded project video"
+            loading="lazy"
+            data-autoplay-in-view={shouldAutoplay ? 'true' : undefined}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          />
+        </div>
+      )
+    }
 
     {
-      images.length === 1 && (
+      images.length === 0 && text && (
+        <p
+          class:list={[
+            'project-section__text',
+            { 'project-section__text--small': smallText, 'project-section__text--caption': captionText },
+          ]}
+        >
+          {text.split('\n').map((line, i) => (
+            <>
+              {i > 0 && <br />}
+              {line}
+            </>
+          ))}
+        </p>
+      )
+    }
+
+    {
+      note && (
+        <p class="project-section__note">
+          {note.split('\n').map((line, i) => (
+            <>
+              {i > 0 && <br />}
+              {line}
+            </>
+          ))}
+        </p>
+      )
+    }
+
+    {
+      isAnnotated && (
+        <figure class="anno">
+          <div class="anno__frame" style={`width:${IMG_W}%`}>
+            <Image
+              class="anno__img"
+              src={images[0].src}
+              alt={images[0].caption ?? ''}
+              widths={[640, 1024, 1600]}
+              sizes="(min-width: 48rem) 72vw, 100vw"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="anno__layer">
+            {annotations.map((a) => {
+              const anchorX = (a.x * IMG_W) / 100;
+              return (
+                <div class="anno__item" style={`top:${a.y}%`}>
+                  <span class="anno__line" style={`left:${anchorX}%; width:${LABEL_X - anchorX}%`} />
+                  <span class="anno__text" style={`left:${LABEL_X}%`}>
+                    {a.text}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {images[0].caption && <figcaption class="anno__caption">{images[0].caption}</figcaption>}
+        </figure>
+      )
+    }
+
+    {
+      images.length === 1 && !compact && !isAnnotated && (
         <figure class="project-section__figure">
           <Image
+            class:list={{ 'js-zoomable': zoom }}
             src={images[0].src}
             alt={images[0].caption ?? ''}
-            widths={[640, 1024, 1600]}
+            widths={[640, 1024, 1600, 2400]}
             sizes="100vw"
             loading="lazy"
             decoding="async"
@@ -48,16 +228,22 @@ const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
     }
 
     {
-      images.length >= 2 && (
+      (images.length >= 2 || (isCompactSingle && !isAnnotated)) && (
         <>
-          <div class="project-section__row">
+          <div
+            class:list={[
+              'project-section__row',
+              { 'project-section__row--grid': grid, 'project-section__row--narrow': narrow, 'project-section__row--compact': isCompactSingle },
+            ]}
+          >
             {images.map((img) => (
               <figure class="project-section__figure project-section__figure--row" style={{ '--ar': aspectRatio(img) }}>
                 <Image
+                  class:list={{ 'js-zoomable': zoom }}
                   src={img.src}
                   alt={img.caption ?? sharedCaption ?? ''}
-                  widths={[400, 800, 1200]}
-                  sizes={sizesFor(images.length)}
+                  widths={[400, 800, 1200, 2000]}
+                  sizes={sizesFor(isCompactSingle ? 2 : images.length)}
                   loading="lazy"
                   decoding="async"
                 />
@@ -70,13 +256,231 @@ const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
       )
     }
 
-    {images.length > 0 && text && <p class="project-section__text">{text}</p>}
+    {
+      images.length > 0 && text && (
+        <p
+          class:list={[
+            'project-section__text',
+            { 'project-section__text--small': smallText, 'project-section__text--caption': captionText },
+          ]}
+        >
+          {text}
+        </p>
+      )
+    }
   </div>
 </section>
+
+<style is:global>
+  /* Click-to-zoom lightbox overlay, shared across every project page.
+     Built once by the script below and reused for every <dialog>; styled
+     globally since the <dialog> is appended directly to <body>, outside
+     any single ProjectSection instance's scoped styles. */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    border: none;
+    padding: 0;
+    background: transparent;
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .lightbox::backdrop {
+    background: rgba(28, 26, 22, 0.92);
+  }
+
+  .lightbox__stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    gap: var(--space-3);
+  }
+
+  .lightbox__img {
+    max-width: 100%;
+    max-height: 82vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    cursor: default;
+  }
+
+  .lightbox__caption {
+    color: var(--color-dark-text);
+    font-size: var(--text-sm);
+    max-width: 46rem;
+    text-align: center;
+  }
+
+  .lightbox__caption:empty {
+    display: none;
+  }
+
+  .lightbox__close,
+  .lightbox__prev,
+  .lightbox__next {
+    position: absolute;
+    background: transparent;
+    border: none;
+    color: var(--color-dark-text);
+    cursor: pointer;
+    line-height: 1;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .lightbox__close:hover,
+  .lightbox__prev:hover,
+  .lightbox__next:hover {
+    color: var(--color-accent);
+  }
+
+  .lightbox__close {
+    top: var(--space-6);
+    right: var(--space-6);
+    font-size: var(--text-2xl);
+    padding: var(--space-2);
+  }
+
+  .lightbox__prev,
+  .lightbox__next {
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 3rem;
+    padding: var(--space-4);
+  }
+
+  .lightbox__prev {
+    left: var(--space-4);
+  }
+
+  .lightbox__next {
+    right: var(--space-4);
+  }
+
+  .lightbox__prev[hidden],
+  .lightbox__next[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 48rem) {
+    /* Too narrow for a label column: the drawing goes full width and the
+       callouts fall below it as an ordinary list. */
+    .anno__frame {
+      width: 100% !important;
+    }
+    .anno__layer {
+      position: static;
+      padding-top: var(--space-4);
+    }
+    .anno__item {
+      position: static;
+      transform: none;
+      left: auto !important;
+      padding-block: var(--space-1);
+    }
+    .anno__line {
+      display: none;
+    }
+    .anno__text {
+      position: static;
+      transform: none;
+      left: auto !important;
+      display: block;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .lightbox__stage {
+      padding: var(--space-4);
+    }
+    .lightbox__prev,
+    .lightbox__next {
+      font-size: 2rem;
+      padding: var(--space-2);
+    }
+    .lightbox__close {
+      top: var(--space-3);
+      right: var(--space-3);
+    }
+  }
+</style>
 
 <style>
   .project-section {
     padding-block: var(--space-8);
+  }
+
+  /* The gap above an annotated drawing was double the gap below it: the space
+     above is TWO paddings stacked (this section's top + the previous section's
+     bottom, 2rem each), while below there was only the caption's 1rem. Dropping
+     this section's own top padding halves the space above to a single 2rem, and
+     the caption's padding below is doubled to the same 2rem — so the drawing
+     now sits with equal air top and bottom. */
+  .project-section--annotated {
+    padding-top: 0;
+  }
+
+  /* Embedded video: centered on the page, 75% of the content width between
+     the left/right margins. */
+  .project-section__video {
+    width: 75%;
+    margin-inline: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  /* Banner video: spans the full container width so its left/right edges line
+     up with the text and fact rows above it. */
+  .project-section__video--banner {
+    width: 100%;
+  }
+
+  .project-section__video iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  @media (max-width: 48rem) {
+    /* Too narrow for a label column: the drawing goes full width and the
+       callouts fall below it as an ordinary list. */
+    .anno__frame {
+      width: 100% !important;
+    }
+    .anno__layer {
+      position: static;
+      padding-top: var(--space-4);
+    }
+    .anno__item {
+      position: static;
+      transform: none;
+      left: auto !important;
+      padding-block: var(--space-1);
+    }
+    .anno__line {
+      display: none;
+    }
+    .anno__text {
+      position: static;
+      transform: none;
+      left: auto !important;
+      display: block;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .project-section__video {
+      width: 100%;
+    }
   }
 
   /* Side-by-side row: equal image heights via the aspect-ratio flex trick
@@ -86,6 +490,28 @@ const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
     display: flex;
     align-items: flex-start;
     gap: var(--space-8);
+  }
+
+  /* Booklet-grid rows (Behance-style): pages of one spread sit nearly flush,
+     separated only by a hairline gutter, so the surrounding white space does
+     the breathing instead of the gaps between pages. */
+  .project-section__row--grid {
+    gap: 0.25rem;
+  }
+
+  /* Inset centered row — mirrors Behance's smaller 2-up rows (1202px inside
+     a 1400px module = ~86%). */
+  .project-section__row--narrow {
+    max-width: 86%;
+    margin-inline: auto;
+  }
+
+  /* A lone trailing image styled to match the 2-up rows above it: capped to
+     one row-slot's width (half the row, minus half the gap) and left-aligned
+     to the same margin, instead of stretching full-width and reading much
+     taller than its neighbours. */
+  .project-section__row--compact {
+    max-width: calc(50% - var(--space-8) / 2);
   }
 
   .project-section__figure--row {
@@ -100,13 +526,101 @@ const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
     height: auto;
   }
 
+  /* Images carrying js-zoomable open a lightbox on click (see script below) —
+     the zoom cursor is the only hint needed, since they already read as
+     photos/drawings rather than buttons. Projects opt in via `imageZoom`, so
+     on most pages this class is absent and the images are inert. */
+  .project-section__figure img.js-zoomable {
+    cursor: zoom-in;
+  }
+
   .project-section__figure figcaption,
   .project-section__shared-caption {
     padding-top: var(--space-2);
     font-size: var(--text-sm);
     color: var(--color-muted);
-    /* Captions read as text, so cap their width even under wide images. */
-    max-width: 46rem;
+    /* Match the image's own margins exactly — left and right — rather than
+       capping at a fixed measure that falls short of the image's right
+       edge. Left-aligned per Vanessa's request (not justified). */
+    max-width: none;
+    text-align: left;
+  }
+
+  /* --- Annotated drawing -------------------------------------------------
+     Image on the left, labels in a column on the right, joined by leader
+     lines. Everything is positioned in percentages of the figure, so the
+     callouts stay locked to the drawing as it scales. */
+  .anno {
+    position: relative;
+    margin: 0;
+  }
+
+  .anno__frame {
+    /* Width is set inline from IMG_W so the script and the styles can't drift
+       apart — the leader-line maths depends on this exact value. */
+    display: block;
+  }
+
+  .anno__img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* The overlay spans the whole figure, image column and label column both,
+     and never swallows clicks meant for the page beneath it. */
+  .anno__layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* Each callout spans the WHOLE figure — left:0 AND right:0 — which is what
+     makes it a valid containing block for the percentages below. An absolutely
+     positioned box with only `left` set is shrink-to-fit, so a child's `width:
+     N%` would resolve against the box's own content width instead of the
+     figure: the leader collapsed and dragged its label back onto the drawing.
+     Nothing here is flex, so no element can be sized by its text. */
+  .anno__item {
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* The label's vertical centre — not its top — lines up with the leader. */
+    transform: translateY(-50%);
+  }
+
+  /* Runs from its anchor on the drawing to the label column; both ends are
+     percentages of the figure, set inline per annotation. */
+  .anno__line {
+    position: absolute;
+    top: 50%;
+    height: 2px;
+    background: var(--color-muted);
+    opacity: 0.55;
+  }
+
+  /* Left edge fixed at LABEL_X, right edge at the container margin. A long
+     label can only wrap downward inside that column — it can never reach back
+     over the drawing. */
+  .anno__text {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    padding-left: var(--space-4);
+    font-family: var(--font-heading);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--color-muted);
+  }
+
+  .anno__caption {
+    padding-top: var(--space-8);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    max-width: none;
+    text-align: left;
   }
 
   /* Paragraphs stay at a comfortable reading measure rather than stretching
@@ -115,12 +629,75 @@ const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
     font-size: var(--text-lg);
     line-height: 1.6;
     color: var(--color-ink);
-    max-width: 46rem;
+    /* Fluid measure: grows with the window (was a fixed 46rem, which made
+       paragraphs feel frozen when resizing the browser). */
+    max-width: var(--text-measure);
     padding-top: var(--space-4);
+  }
+
+  /* A size step down from the default — for long explanatory paragraphs, so
+     they read as a lower level of hierarchy than short divider/heading text
+     (which stays at the default .project-section__text size above). Also
+     drops the fluid reading-measure cap: these paragraphs sit directly under
+     a full-width image, so they should share its exact left/right margins
+     rather than trailing off short of the image's right edge. */
+  .project-section__text--small {
+    font-size: var(--text-base);
+    max-width: none;
+  }
+
+  /* Matches figcaption/.project-section__shared-caption exactly — for
+     reference/meta text (e.g. a closing bibliography) that belongs at the
+     same low-key level as a photo caption, not as a body paragraph. */
+  .project-section__text--caption {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    max-width: none;
+    text-align: justify;
+  }
+
+  /* A short line tucked right under a heading/`text` above it — e.g. a
+     disclaimer under "Site Reviews". Smaller than a photo caption
+     (--text-sm) and pulled close with a small margin instead of the
+     section's own padding-block, so it reads as an annex to the heading
+     rather than a separate paragraph a whole section-gap away. */
+  .project-section__note {
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+    color: var(--color-muted);
+    max-width: var(--text-measure);
   }
 
   /* On narrow screens the row stacks; each image returns to its natural
      full-width block so nothing is squeezed. */
+  @media (max-width: 48rem) {
+    /* Too narrow for a label column: the drawing goes full width and the
+       callouts fall below it as an ordinary list. */
+    .anno__frame {
+      width: 100% !important;
+    }
+    .anno__layer {
+      position: static;
+      padding-top: var(--space-4);
+    }
+    .anno__item {
+      position: static;
+      transform: none;
+      left: auto !important;
+      padding-block: var(--space-1);
+    }
+    .anno__line {
+      display: none;
+    }
+    .anno__text {
+      position: static;
+      transform: none;
+      left: auto !important;
+      display: block;
+    }
+  }
+
   @media (max-width: 40rem) {
     .project-section__row {
       flex-direction: column;
@@ -128,5 +705,175 @@ const aspectRatio = (img: SectionImage) => img.src.width / img.src.height;
     .project-section__figure--row {
       flex: none;
     }
+    /* On phones there's no neighbouring row-height to match, so the compact
+       single image just reverts to the normal full-width treatment. */
+    .project-section__row--compact {
+      max-width: 100%;
+    }
   }
 </style>
+
+<script>
+  // Click-to-zoom lightbox, shared by every project page (this component is
+  // reused once per section, but Astro dedupes identical module scripts so
+  // this only runs once per page load). All zoomable images on the page are
+  // gathered into one group in document order, so prev/next arrows step
+  // through every image on the page, not just the row that was clicked.
+  type LightboxItem = { src: string; alt: string; caption: string };
+
+  function biggestFromSrcset(img: HTMLImageElement): string {
+    const srcset = img.getAttribute('srcset');
+    if (!srcset) return img.currentSrc || img.src;
+    let bestUrl = img.currentSrc || img.src;
+    let bestWidth = 0;
+    for (const entry of srcset.split(',')) {
+      const [url, descriptor] = entry.trim().split(/\s+/);
+      const width = parseInt(descriptor, 10) || 0;
+      if (url && width > bestWidth) {
+        bestWidth = width;
+        bestUrl = url;
+      }
+    }
+    return bestUrl;
+  }
+
+  function initLightbox() {
+    const sections = document.querySelectorAll<HTMLElement>('.project-section');
+    if (sections.length === 0) return;
+
+    let dialogEl: HTMLDialogElement;
+    let stageImg: HTMLImageElement;
+    let captionEl: HTMLElement;
+    let prevBtn: HTMLButtonElement;
+    let nextBtn: HTMLButtonElement;
+
+    let activeGroup: LightboxItem[] = [];
+    let activeIndex = 0;
+
+    function ensureDialog() {
+      if (dialogEl) return;
+      dialogEl = document.createElement('dialog');
+      dialogEl.className = 'lightbox';
+      dialogEl.innerHTML = `
+        <div class="lightbox__stage">
+          <button type="button" class="lightbox__close" aria-label="Close">&times;</button>
+          <button type="button" class="lightbox__prev" aria-label="Previous image">&#8249;</button>
+          <img class="lightbox__img" alt="" />
+          <p class="lightbox__caption"></p>
+          <button type="button" class="lightbox__next" aria-label="Next image">&#8250;</button>
+        </div>
+      `;
+      document.body.appendChild(dialogEl);
+
+      const stageEl = dialogEl.querySelector('.lightbox__stage')!;
+      stageImg = dialogEl.querySelector('.lightbox__img')!;
+      captionEl = dialogEl.querySelector('.lightbox__caption')!;
+      prevBtn = dialogEl.querySelector('.lightbox__prev')!;
+      nextBtn = dialogEl.querySelector('.lightbox__next')!;
+      const closeBtn = dialogEl.querySelector('.lightbox__close')!;
+
+      closeBtn.addEventListener('click', () => dialogEl.close());
+      prevBtn.addEventListener('click', () => render(activeIndex - 1));
+      nextBtn.addEventListener('click', () => render(activeIndex + 1));
+
+      // The stage div fills the whole dialog, so a "backdrop" click is really
+      // a click that lands on the stage's own padding (its target is the
+      // stage or the dialog itself) rather than on the image/caption/buttons.
+      const closeIfBackdrop = (event: MouseEvent) => {
+        if (event.target === dialogEl || event.target === stageEl) dialogEl.close();
+      };
+      dialogEl.addEventListener('click', closeIfBackdrop);
+      stageEl.addEventListener('click', closeIfBackdrop);
+
+      dialogEl.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') render(activeIndex - 1);
+        if (event.key === 'ArrowRight') render(activeIndex + 1);
+      });
+    }
+
+    function render(i: number) {
+      if (activeGroup.length === 0) return;
+      activeIndex = (i + activeGroup.length) % activeGroup.length;
+      const item = activeGroup[activeIndex];
+      stageImg.src = item.src;
+      stageImg.alt = item.alt;
+      captionEl.textContent = item.caption;
+      const multi = activeGroup.length > 1;
+      prevBtn.hidden = !multi;
+      nextBtn.hidden = !multi;
+    }
+
+    function openAt(index: number) {
+      ensureDialog();
+      render(index);
+      dialogEl.showModal();
+    }
+
+    // One group for the whole page, in document order, so prev/next steps
+    // through every zoomable image on the page — not just the ones in the
+    // row/section that was clicked.
+    const allFigures: HTMLElement[] = [];
+    sections.forEach((section) => {
+      const sharedCaption = section.querySelector('.project-section__shared-caption')?.textContent?.trim() ?? '';
+      const figures = Array.from(section.querySelectorAll<HTMLElement>('.project-section__figure'));
+      figures.forEach((figure) => {
+        if (figure.querySelector('img.js-zoomable')) {
+          figure.dataset.lightboxCaption = figure.querySelector('figcaption')?.textContent?.trim() || sharedCaption;
+          allFigures.push(figure);
+        }
+      });
+    });
+
+    activeGroup = allFigures.map((figure) => {
+      const img = figure.querySelector<HTMLImageElement>('img');
+      return {
+        src: img ? biggestFromSrcset(img) : '',
+        alt: img?.getAttribute('alt') ?? '',
+        caption: figure.dataset.lightboxCaption ?? '',
+      };
+    });
+
+    allFigures.forEach((figure, i) => {
+      const img = figure.querySelector<HTMLImageElement>('img.js-zoomable');
+      img?.addEventListener('click', () => openAt(i));
+    });
+  }
+
+  // Re-run on every page load AND after each client-side navigation. The site
+  // uses <ClientRouter /> (View Transitions), which swaps in new page HTML
+  // without a full reload — a bare initLightbox() call would only ever run on
+  // the first hard load, leaving click handlers unbound on pages reached by
+  // navigating within the site. astro:page-load fires on the initial load and
+  // after every swap, so the lightbox binds on whichever project page loads.
+  document.addEventListener('astro:page-load', initLightbox);
+
+  // Banner videos (data-autoplay-in-view) start playing when scrolled into
+  // view and pause when scrolled away. Autoplay is only allowed while muted,
+  // so these embeds are loaded with &mute=1; the user can unmute via the
+  // player controls. Commands are sent through the YouTube IFrame API
+  // (enablejsapi=1) via postMessage.
+  function initVideoAutoplay() {
+    const frames = document.querySelectorAll<HTMLIFrameElement>('iframe[data-autoplay-in-view]');
+    if (frames.length === 0) return;
+
+    const command = (frame: HTMLIFrameElement, func: 'playVideo' | 'pauseVideo') => {
+      frame.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*');
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const frame = entry.target as HTMLIFrameElement;
+          command(frame, entry.isIntersecting && entry.intersectionRatio >= 0.5 ? 'playVideo' : 'pauseVideo');
+        }
+      },
+      // Fire once at least half the player is on screen — enough that it reads
+      // as "scrolled to the video" without triggering on a sliver.
+      { threshold: [0, 0.5] },
+    );
+
+    frames.forEach((frame) => observer.observe(frame));
+  }
+
+  document.addEventListener('astro:page-load', initVideoAutoplay);
+</script>
