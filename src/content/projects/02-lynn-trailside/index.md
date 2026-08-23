@@ -27,5 +27,5 @@ imageCredit: "Images taken by Vanessa Tam on site visits while employed at RWA G
 heroImage: ./hero.jpg
 sections:
   - text: "Site Reviews"
-    note: "All deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
+    note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
 ---

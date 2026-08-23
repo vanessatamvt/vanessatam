@@ -28,5 +28,5 @@ heroImage: ./hero.jpg
 heroPosition: "center bottom"
 sections:
   - text: "Site Reviews"
-    note: "All deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
+    note: "All site items shown were photos taken at the time of review.\nAll deficiencies are expected to be rectified in accordance with relevant building codes and regulations prior to occupancy."
 ---
