@@ -47,13 +47,13 @@ sections:
       - src: ./gallery-04-masterplan.jpg
         caption: "Masterplan: agricultural and flower fields, temporary exposition grounds, and art opportunities threaded by a main path from the park into the Via Corelli gallery and out toward the Idroscalo"
 
-  # Via Corelli — why the northern border, then the gallery
-  - text: "Most passers-by never notice the park at all. Comparing its two edges, the northern border along Via Arcangelo Corelli — slower traffic, a thick sequence of walls and fences between road and park — offers far more to work with than the fast, porous Viale Forlanini. Via Corelli becomes the project's open-air gallery: a promenade where walls, fences, and entrances are turned into art, organised into five systems."
-    smallText: true
-
+  # Via Corelli — road analysis first, then why the northern border, then the gallery
   - images:
       - src: ./gallery-05-road-analysis.jpg
         caption: "Road analysis: the sinuous, slower Via Arcangelo Corelli, lined with a continuous sequence of walls and fences, is far better suited to a walkable open-air gallery than the linear Viale Enrico Forlanini"
+
+  - text: "Most passers-by never notice the park at all. Comparing its two edges, the northern border along Via Arcangelo Corelli — slower traffic, a thick sequence of walls and fences between road and park — offers far more to work with than the fast, porous Viale Forlanini. Via Corelli becomes the project's open-air gallery: a promenade where walls, fences, and entrances are turned into art, organised into five systems."
+    smallText: true
 
   - images:
       - src: ./gallery-06-corelli-gallery-plan.jpg
