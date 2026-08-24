@@ -51,20 +51,37 @@ sections:
       - src: ./gallery-06-corelli-gallery-plan.jpg
         caption: "The Via Corelli gallery: a continuous art promenade from the city toward the Idroscalo, organised into five systems along the park's northern edge"
 
-  # The five systems — transformation vignettes, in the Behance sequence
+  # The five systems — transformation vignettes, in the Behance sequence.
+  # Each photo is its own row, capped to Urban Garden's size (compact) and
+  # left-aligned, rather than paired 2-up — all seven were cropped to Urban
+  # Garden's aspect ratio so they read as a uniform stack.
   - images:
       - src: ./gallery-07-urban-garden.jpg
         caption: "The Urban Garden — an event space to introduce artworks and host gatherings, lit for evenings so the adjacent landmark buildings register at night"
+    compact: true
+
+  - images:
       - src: ./gallery-08-chromatic-garden.jpg
         caption: "The Chromatic Garden — native species chosen to bloom in succession (cherry laurels, daisies, lilies, cherry trees, Turkish hazel), revealing nature's changing colours to passing cyclists"
+    compact: true
 
   - images:
-      - src: ./gallery-09-artcade.jpg
+      - src: ./gallery-09-artcade-a.jpg
         caption: "The Ar(t)cade — the space beneath the highway, sheltered from rain and glare, where rows of columns become canvases and the ground behind AMSA hosts large open-air installations"
+    compact: true
 
   - images:
-      - src: ./gallery-10-wall-street-gallery.jpg
+      - src: ./gallery-09-artcade-b.jpg
+    compact: true
+
+  - images:
+      - src: ./gallery-10-wall-street-gallery-a.jpg
         caption: "The Wall Street Gallery — continuous concrete and brick walls given over to graffiti, green street art, and projected light: the existing edge, and its transformation"
+    compact: true
+
+  - images:
+      - src: ./gallery-10-wall-street-gallery-b.jpg
+    compact: true
 
   - images:
       - src: ./gallery-11-village-of-curiosities.jpg
