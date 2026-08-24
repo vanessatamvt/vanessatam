@@ -39,8 +39,6 @@ sections:
   - images:
       - src: ./gallery-03-feel-make-engage.jpg
         caption: "Three experiential rooms from the western entrance to the Idroscalo — FEEL (nature as art), MAKE (art in nature), and ENGAGE (art with nature) — linked as one continuous art walk"
-    text: "The cycle of Feel, Make, and Engage is not a one-way process but a multi-linked loop of discovery across the park's existing conditions. Specific interventions activate a continuous passage from the western entrance near Aquabella to the Idroscalo: a Metro Line 4 logistics centre reborn as an educational hub, the gasometer as a viewing platform, Via Taverna as an artists' village, an industrial centre as an art-exchange platform, Novegro as an experimental art space, and the open fields as large-scale flower plantations and lighting systems."
-    smallText: true
 
   # Masterplan
   - images:
