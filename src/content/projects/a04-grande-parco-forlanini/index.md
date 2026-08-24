@@ -16,14 +16,16 @@ heroImage: ./hero.jpg
 heroCaption: "Multi-Art in Nature — the disused gasometer reborn as a viewing platform above the park's flower fields, framed by street art, kites, and balloons"
 sections:
   # Framing — the concept, mirroring the Behance introduction
+  - text: "Site Analysis"
+
+  - text: "\"Art must meet man's and nature's pace. Art must respect nature and the laws of nature. Art must again be a bridge between the creativity of nature and the creativity of man. Art must regain its universal function for all and not be just a fashionable business for insiders.\" — Hundertwasser, 1990"
+    captionText: true
+
   - text: "Grande Parco Forlanini is a vast, fragmented green wedge at Milan's eastern edge — agricultural fields, the shelter of a highway, active sports grounds, the serene Romantic Park, abandoned structures, and the quiet neighbourhood of Novegro — none of which reads as a single park."
     smallText: true
 
   - text: "This project turns that fragmentation into opportunity: a park where low-profile artists, children, and everyday citizens make, exhibit, and encounter art in harmony with nature, generating a positive feedback loop with the Milan art scene."
     smallText: true
-
-  - text: "\"Art must meet man's and nature's pace. Art must respect nature and the laws of nature. Art must again be a bridge between the creativity of nature and the creativity of man. Art must regain its universal function for all and not be just a fashionable business for insiders.\" — Hundertwasser, 1990"
-    captionText: true
 
   # Introduction — the site's many fabrics
   - images:
