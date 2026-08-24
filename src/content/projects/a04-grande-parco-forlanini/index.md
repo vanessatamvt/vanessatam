@@ -21,16 +21,16 @@ sections:
 
   - text: "Site Analysis"
 
+  # Introduction — the site's many fabrics
+  - images:
+      - src: ./gallery-01-park-fabrics.jpg
+        caption: "The park's many fabrics — the highway viaduct, open agricultural fields, the cycling promenade, the disused gasometer, bordering office towers, and wooded groves — all as separate disconnected places rather than one park"
+
   - text: "This project turns that fragmentation into opportunity: a park where low-profile artists, children, and everyday citizens make, exhibit, and encounter art in harmony with nature, generating a positive feedback loop with the Milan art scene."
     smallText: true
 
   - text: "Grande Parco Forlanini is a vast, fragmented green wedge at Milan's eastern edge — agricultural fields, the shelter of a highway, active sports grounds, the serene Romantic Park, abandoned structures, and the quiet neighbourhood of Novegro — none of which reads as a single park."
     smallText: true
-
-  # Introduction — the site's many fabrics
-  - images:
-      - src: ./gallery-01-park-fabrics.jpg
-        caption: "The park's many fabrics — the highway viaduct, open agricultural fields, the cycling promenade, the disused gasometer, bordering office towers, and wooded groves — all as separate disconnected places rather than one park"
 
   # Concept — Milan's green ring and the art-and-nature feedback loop
   - images:
