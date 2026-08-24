@@ -5,7 +5,7 @@ category: academic
 code: "04"
 tag: "Italy"
 stage: "Academic Studio, with Prof. Grazia Concilio"
-description: "Multi-Art in Nature — turning a fragmented green wedge at Milan's edge into a public park where low-profile artists, children, and everyday citizens make, exhibit, and encounter art in harmony with nature."
+description: "Multi-Art in Nature — Providing Creative Opportunities for the Public Experience"
 facts:
   affiliation: "Politecnico di Milano, with Prof. Grazia Concilio"
   projectType: "Urban Design"
@@ -16,7 +16,10 @@ heroImage: ./hero.jpg
 heroCaption: "Multi-Art in Nature — the disused gasometer reborn as a viewing platform above the park's flower fields, framed by street art, kites, and balloons"
 sections:
   # Framing — the concept, mirroring the Behance introduction
-  - text: "Grande Parco Forlanini is a vast, fragmented green wedge at Milan's eastern edge — agricultural fields, the shelter of a highway, active sports grounds, the serene Romantic Park, abandoned structures, and the quiet neighbourhood of Novegro — none of which reads as a single park. Multi-Art in Nature turns that fragmentation into opportunity: a park where low-profile artists, children, and everyday citizens make, exhibit, and encounter art in harmony with nature, generating a positive feedback loop with the Milan art scene. Developed at Politecnico di Milano in a team of three."
+  - text: "Grande Parco Forlanini is a vast, fragmented green wedge at Milan's eastern edge — agricultural fields, the shelter of a highway, active sports grounds, the serene Romantic Park, abandoned structures, and the quiet neighbourhood of Novegro — none of which reads as a single park."
+    smallText: true
+
+  - text: "This project turns that fragmentation into opportunity: a park where low-profile artists, children, and everyday citizens make, exhibit, and encounter art in harmony with nature, generating a positive feedback loop with the Milan art scene."
     smallText: true
 
   - text: "\"Art must meet man's and nature's pace. Art must respect nature and the laws of nature. Art must again be a bridge between the creativity of nature and the creativity of man. Art must regain its universal function for all and not be just a fashionable business for insiders.\" — Hundertwasser, 1990"
@@ -25,7 +28,7 @@ sections:
   # Introduction — the site's many fabrics
   - images:
       - src: ./gallery-01-park-fabrics.jpg
-        caption: "The park's many fabrics — the highway viaduct, open agricultural fields, the cycling promenade, the disused gasometer, bordering office towers, and wooded groves — today read as separate places rather than one park"
+        caption: "The park's many fabrics — the highway viaduct, open agricultural fields, the cycling promenade, the disused gasometer, bordering office towers, and wooded groves — all as separate disconnected places rather than one park"
 
   # Concept — Milan's green ring and the art-and-nature feedback loop
   - images:
