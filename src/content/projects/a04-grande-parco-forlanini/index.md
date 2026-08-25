@@ -52,11 +52,10 @@ sections:
         caption: "The Via Corelli gallery: a continuous art promenade from the city toward the Idroscalo, organised into five systems along the park's northern edge"
 
   # The five systems — transformation vignettes, in the Behance sequence.
-  # Urban Garden and Chromatic Garden each pair with their own companion
-  # page from the book (28/39 and 30/41 — the systems breakdown + axo for
-  # that space) as 2-up rows, kept whole rather than cropped to just the
-  # drawing. The rest are each their own row, capped to Urban Garden's
-  # size (compact) and left-aligned, so they read as a uniform stack.
+  # Each system's photo(s) pair 2-up with (or are followed full-width by)
+  # its own companion page from the book — the systems breakdown + axo for
+  # that space — kept whole and at their own true proportions, not cropped
+  # or shrunk to match anything else.
   - images:
       - src: ./gallery-07-urban-garden.jpg
         caption: "The Urban Garden — an event space to introduce artworks and host gatherings, lit for evenings so the adjacent landmark buildings register at night"
@@ -70,31 +69,34 @@ sections:
   - images:
       - src: ./gallery-09-artcade-a.jpg
         caption: "The Ar(t)cade — the space beneath the highway, sheltered from rain and glare, where rows of columns become canvases and the ground behind AMSA hosts large open-air installations"
-    compact: true
+      - src: ./gallery-09-artcade-b.jpg
 
   - images:
-      - src: ./gallery-09-artcade-b.jpg
-    compact: true
+      - src: ./gallery-09c-artcade-systems.jpg
 
   - images:
       - src: ./gallery-10-wall-street-gallery-a.jpg
         caption: "The Wall Street Gallery — continuous concrete and brick walls given over to graffiti, green street art, and projected light: the existing edge, and its transformation"
-    compact: true
+      - src: ./gallery-10-wall-street-gallery-b.jpg
 
   - images:
-      - src: ./gallery-10-wall-street-gallery-b.jpg
-    compact: true
+      - src: ./gallery-10c-wallstreet-systems.jpg
 
   - images:
       - src: ./gallery-11-village-of-curiosities.jpg
         caption: "The Village of Curiosities — at Via Novegro, experimental art and murals give the quiet neighbourhood a character of its own"
-    compact: true
+      - src: ./gallery-11b-village-systems.jpg
 
   # Closing — activation phases
   - text: "Activation unfolds in four phases: initiation and agreements with the municipalities of Milan, Novegro, and Segrate; first short-term interventions along the Via Corelli walls; long-term realisation with the first open public exhibitions and new sponsorships; and finally stabilisation, as Grande Parco Forlanini establishes its fame and draws collaborations with cultural actors such as MiArt and Green City Milano. The regeneration is designed as a continuous cycle — a new destination where Milan encounters art and nature together."
     smallText: true
 
+  # Timeline + its phase-map companion page, stacked full-width (not
+  # side by side) so their left/right margins line up.
   - images:
       - src: ./gallery-12-timeline.jpg
         caption: "Activation timeline, 2020–2035: from preparation and the arrival of Metro Line 4, through the activation of the open-air rooms and experimental exhibitions, to the park's regeneration and fame"
+
+  - images:
+      - src: ./gallery-12b-phases.jpg
 ---
