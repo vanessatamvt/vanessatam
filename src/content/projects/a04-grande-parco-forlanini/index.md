@@ -73,6 +73,9 @@ sections:
   - images:
       - src: ./gallery-08-chromatic-garden.jpg
         caption: "The Chromatic Garden — native species chosen to bloom in succession (cherry laurels, daisies, lilies, cherry trees, Turkish hazel), revealing nature's changing colours to passing cyclists"
+      - src: ./gallery-08c-sports-entrance.jpg
+
+  - images:
       - src: ./gallery-08b-chromatic-systems.jpg
 
   - images:
