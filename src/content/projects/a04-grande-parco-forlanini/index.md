@@ -39,6 +39,15 @@ sections:
       - src: ./gallery-04-masterplan.jpg
         caption: "Masterplan: agricultural and flower fields, temporary exposition grounds, and art opportunities threaded by a main path from the park into the Via Corelli gallery and out toward the Idroscalo"
 
+  # Tool kit — walls/fences, roads, parking/landmarks/pocket places, lighting
+  # systems (pages 15-18), 2x2 below the masterplan.
+  - images:
+      - src: ./gallery-04b-toolkit-walls.jpg
+      - src: ./gallery-04c-toolkit-roads.jpg
+  - images:
+      - src: ./gallery-04d-toolkit-parking.jpg
+      - src: ./gallery-04e-toolkit-lighting.jpg
+
   # Via Corelli — road analysis first, then why the northern border, then the gallery
   - images:
       - src: ./gallery-05-road-analysis.jpg
