@@ -34,6 +34,7 @@ interface Props {
   /** Render `text` like a photo caption — for reference/meta copy (e.g. a
    *  closing bibliography) rather than narrative body text. */
   captionText?: boolean;
+  leadText?: boolean;
   /** A standalone embedded video (YouTube URL) — put it in its own section
    *  with no `images` to place it between other sections. */
   video?: string;
@@ -75,6 +76,7 @@ const {
   narrow = false,
   smallText = false,
   captionText = false,
+  leadText = false,
   video,
   videoBanner = false,
   autoplay,
@@ -237,7 +239,7 @@ const videoId = youtubeId(video);
           </figure>
           <div class="project-section__beside-text">
             {(text ?? '').split('\n').filter(Boolean).map((line, i) => (
-              <p class="project-section__beside-para" data-first={i === 0 ? '' : undefined}>
+              <p class:list={['project-section__beside-para', { 'project-section__beside-para--lead': leadText }]} data-first={i === 0 ? '' : undefined}>
                 {line}
               </p>
             ))}
@@ -613,6 +615,11 @@ const videoId = youtubeId(video);
     font-size: var(--text-sm);
     line-height: 1.75;
     color: var(--color-ink);
+  }
+
+  .project-section__beside-para--lead {
+    font-size: var(--text-lg);
+    line-height: 1.5;
   }
 
   .project-section__beside-para + .project-section__beside-para {

@@ -232,6 +232,7 @@ const projects = defineCollection({
             // since it belongs at that lower level of the hierarchy, not
             // alongside the page's actual body paragraphs.
             captionText: z.boolean().optional(),
+            leadText: z.boolean().optional(),
             // A standalone embedded video (YouTube URL, e.g.
             // https://youtu.be/xxxx or https://www.youtube.com/watch?v=xxxx).
             // Renders as its own centered, 16:9 section — put it in a section
