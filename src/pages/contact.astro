@@ -41,17 +41,17 @@ const email = 'vanessatamvt@gmail.com';
         <form class="contact-form" data-contact-form>
           <div class="contact-form__row">
             <div class="contact-form__field">
-              <label for="first-name" class="contact-form__label">First name</label>
+              <label for="first-name" class="contact-form__label contact-form__label--required">First name</label>
               <input type="text" id="first-name" name="firstName" required autocomplete="given-name" class="contact-form__input" />
             </div>
             <div class="contact-form__field">
-              <label for="last-name" class="contact-form__label">Last name</label>
+              <label for="last-name" class="contact-form__label contact-form__label--required">Last name</label>
               <input type="text" id="last-name" name="lastName" required autocomplete="family-name" class="contact-form__input" />
             </div>
           </div>
 
           <div class="contact-form__field">
-            <label for="email" class="contact-form__label">Email</label>
+            <label for="email" class="contact-form__label contact-form__label--required">Email</label>
             <input type="email" id="email" name="email" required autocomplete="email" class="contact-form__input" />
           </div>
 
@@ -61,7 +61,7 @@ const email = 'vanessatamvt@gmail.com';
           </div>
 
           <div class="contact-form__field">
-            <label for="message" class="contact-form__label">Message</label>
+            <label for="message" class="contact-form__label contact-form__label--required">Message</label>
             <textarea id="message" name="message" rows="5" required class="contact-form__textarea"></textarea>
           </div>
 
@@ -153,6 +153,11 @@ const email = 'vanessatamvt@gmail.com';
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--color-muted);
+  }
+
+  .contact-form__label--required::after {
+    content: ' *';
+    color: var(--color-accent);
   }
 
   .contact-form__input,
