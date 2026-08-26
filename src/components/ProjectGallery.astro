@@ -16,10 +16,15 @@ const { projects } = Astro.props;
   <div class="project-gallery__rail" data-gallery-rail tabindex="0" aria-label="Project gallery, scroll horizontally">
     {projects.map((project) => <ProjectCard project={project} />)}
   </div>
-  <div class="project-gallery__nav container">
+  <nav class="project-gallery__nav container">
     <button class="project-gallery__arrow project-gallery__arrow--left" data-gallery-prev aria-label="Scroll left" disabled>&larr;</button>
+    <ol class="project-gallery__dots" data-gallery-dots>
+      {projects.map((_, i) => (
+        <li><button type="button" data-gallery-dot={i} data-active={i === 0 ? '' : undefined} aria-label={`Go to project ${i + 1}`} /></li>
+      ))}
+    </ol>
     <button class="project-gallery__arrow project-gallery__arrow--right" data-gallery-next aria-label="Scroll right">&rarr;</button>
-  </div>
+  </nav>
 </div>
 
 <style>
@@ -87,6 +92,32 @@ const { projects } = Astro.props;
       opacity: 0;
       pointer-events: none;
     }
+
+    .project-gallery__dots {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .project-gallery__dots button {
+      display: block;
+      width: 1.5rem;
+      height: 3px;
+      background: var(--color-hairline);
+      cursor: pointer;
+      transition: background 160ms ease;
+    }
+
+    .project-gallery__dots button:hover {
+      background: var(--color-muted);
+    }
+
+    .project-gallery__dots button[data-active] {
+      background: var(--color-ink);
+    }
   }
 </style>
 
@@ -115,24 +146,47 @@ const { projects } = Astro.props;
 
     const prevArrow = document.querySelector<HTMLButtonElement>('[data-gallery-prev]');
     const nextArrow = document.querySelector<HTMLButtonElement>('[data-gallery-next]');
+    const dots = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-gallery-dot]'));
+    const cards = Array.from(rail.querySelectorAll<HTMLElement>(':scope > *'));
 
-    const updateArrows = () => {
+    const getCardMetrics = () => {
+      const card = cards[0];
+      if (!card) return { width: 0, gap: 0 };
+      const gap = parseFloat(getComputedStyle(rail).gap) || 0;
+      return { width: card.offsetWidth, gap };
+    };
+
+    const getActiveIndex = () => {
+      const { width, gap } = getCardMetrics();
+      if (!width) return 0;
+      return Math.round(rail.scrollLeft / (width + gap));
+    };
+
+    const updateControls = () => {
       if (prevArrow) prevArrow.disabled = rail.scrollLeft <= 10;
       if (nextArrow) nextArrow.disabled = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 10;
+      const active = getActiveIndex();
+      dots.forEach((d, n) => d.toggleAttribute('data-active', n === active));
     };
 
     const scrollByCard = (dir: number) => {
-      const card = rail.querySelector<HTMLElement>(':scope > *');
-      if (!card) return;
-      const gap = parseFloat(getComputedStyle(rail).gap) || 0;
-      rail.scrollBy({ left: dir * (card.offsetWidth + gap), behavior: 'smooth' });
+      const { width, gap } = getCardMetrics();
+      if (!width) return;
+      rail.scrollBy({ left: dir * (width + gap), behavior: 'smooth' });
+    };
+
+    const scrollToCard = (index: number) => {
+      const { width, gap } = getCardMetrics();
+      if (!width) return;
+      rail.scrollTo({ left: index * (width + gap), behavior: 'smooth' });
     };
 
     prevArrow?.addEventListener('click', () => scrollByCard(-1));
     nextArrow?.addEventListener('click', () => scrollByCard(1));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => scrollToCard(i)));
 
-    rail.addEventListener('scroll', () => requestAnimationFrame(updateArrows), { passive: true });
-    updateArrows();
+    rail.addEventListener('scroll', () => requestAnimationFrame(updateControls), { passive: true });
+    updateControls();
 
     // Horizontal navigation relies on native trackpad swipe and the
     // click-and-drag handler below — deliberately NOT hijacking the mouse
