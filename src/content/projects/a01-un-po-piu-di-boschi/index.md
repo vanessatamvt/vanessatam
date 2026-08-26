@@ -46,10 +46,13 @@ sections:
       - src: ./part1-11.jpg
       - src: ./part1-12.jpg
 
+  # The title render stands on its own, ahead of the thesis book.
+  - images:
+      - src: ./part2-49.png
+
   - text: "Part 2: Master's Thesis"
 
   - flipbook:
-      - src: ./part2-49.jpg
       - src: ./part2-50.jpg
       - src: ./part2-51.jpg
       - src: ./part2-52.jpg
