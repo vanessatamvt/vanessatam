@@ -1,0 +1,272 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+
+const email = 'vanessatamvt@gmail.com';
+const phone = '+1 (604) 362-3678';
+---
+
+<BaseLayout
+  title="Contact"
+  description="Get in touch with Vanessa Tam — architectural designer based in Vancouver, BC."
+  headerVariant="project"
+  backLabel="Work"
+  backHref="/"
+>
+  <article>
+    <section class="contact-hero">
+      <div class="container contact-hero__inner">
+        <div class="contact-hero__label">
+          <SectionLabel text="Contact" />
+        </div>
+        <div class="contact-hero__copy">
+          <h1 class="contact-hero__title">Get in Touch</h1>
+          <p class="contact-hero__desc">
+            Email, call, or complete the form to discuss a project or collaboration.
+          </p>
+          <div class="contact-hero__details">
+            <a href={`mailto:${email}`} class="contact-hero__detail">{email}</a>
+            <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} class="contact-hero__detail">{phone}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="hairline" />
+
+    <section class="contact-form-section">
+      <div class="container contact-form__inner">
+        <div class="contact-form__left">
+          <h2 class="contact-form__heading">Send a Message</h2>
+          <p class="contact-form__note">
+            You can reach me anytime. I'll get back to you as soon as possible.
+          </p>
+        </div>
+
+        <form class="contact-form" data-contact-form>
+          <div class="contact-form__row">
+            <div class="contact-form__field">
+              <label for="first-name" class="contact-form__label">First name</label>
+              <input type="text" id="first-name" name="firstName" required autocomplete="given-name" class="contact-form__input" />
+            </div>
+            <div class="contact-form__field">
+              <label for="last-name" class="contact-form__label">Last name</label>
+              <input type="text" id="last-name" name="lastName" autocomplete="family-name" class="contact-form__input" />
+            </div>
+          </div>
+
+          <div class="contact-form__field">
+            <label for="email" class="contact-form__label">Email</label>
+            <input type="email" id="email" name="email" required autocomplete="email" class="contact-form__input" />
+          </div>
+
+          <div class="contact-form__field">
+            <label for="phone" class="contact-form__label">Phone number</label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" class="contact-form__input" />
+          </div>
+
+          <div class="contact-form__field">
+            <label for="message" class="contact-form__label">Message</label>
+            <textarea id="message" name="message" rows="5" required class="contact-form__textarea"></textarea>
+          </div>
+
+          <button type="submit" class="contact-form__submit">Send Message</button>
+          <p class="contact-form__status" data-form-status aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .contact-hero {
+    padding-block: var(--space-16) var(--space-8);
+  }
+
+  .contact-hero__inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: var(--space-4);
+  }
+
+  .contact-hero__title {
+    font-size: var(--text-hero);
+  }
+
+  .contact-hero__desc {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    margin-top: var(--space-4);
+    max-width: var(--text-measure);
+  }
+
+  .contact-hero__details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-8);
+  }
+
+  .contact-hero__detail {
+    font-size: var(--text-lg);
+    color: var(--color-ink);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .contact-hero__detail:hover {
+    color: var(--color-accent);
+  }
+
+  .contact-form-section {
+    padding-block: var(--space-16);
+  }
+
+  .contact-form__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: start;
+  }
+
+  .contact-form__heading {
+    font-size: var(--text-2xl);
+  }
+
+  .contact-form__note {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    margin-top: var(--space-4);
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .contact-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+
+  .contact-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .contact-form__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .contact-form__input,
+  .contact-form__textarea {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--color-ink);
+    background: transparent;
+    border: var(--hairline-width) solid var(--color-hairline);
+    border-radius: 0;
+    transition: border-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .contact-form__input:focus,
+  .contact-form__textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
+  .contact-form__textarea {
+    resize: vertical;
+    min-height: 8rem;
+  }
+
+  .contact-form__submit {
+    align-self: flex-start;
+    padding: var(--space-3) var(--space-8);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--color-accent);
+    border: none;
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-standard);
+  }
+
+  .contact-form__submit:hover {
+    background: var(--color-accent-hover);
+  }
+
+  .contact-form__submit:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .contact-form__status {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    min-height: 1.5em;
+  }
+
+  @media (max-width: 48rem) {
+    .contact-form__inner {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+
+    .contact-form__row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+    if (!form) return;
+
+    const status = document.querySelector<HTMLElement>('[data-form-status]');
+    const recipient = 'vanessatamvt@gmail.com';
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const firstName = data.get('firstName') || '';
+      const lastName = data.get('lastName') || '';
+      const email = data.get('email') || '';
+      const phone = data.get('phone') || '';
+      const message = data.get('message') || '';
+
+      const subject = encodeURIComponent(
+        `Portfolio inquiry from ${firstName} ${lastName}`.trim(),
+      );
+      const body = encodeURIComponent(
+        [
+          `From: ${firstName} ${lastName}`.trim(),
+          email ? `Email: ${email}` : '',
+          phone ? `Phone: ${phone}` : '',
+          '',
+          message,
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      );
+
+      window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
+
+      if (status) {
+        status.textContent = 'Opening your email client…';
+      }
+    });
+  });
+</script>
