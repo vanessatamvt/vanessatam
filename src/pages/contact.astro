@@ -3,7 +3,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionLabel from '../components/SectionLabel.astro';
 
 const email = 'vanessatamvt@gmail.com';
-const phone = '+1 (604) 362-3678';
 ---
 
 <BaseLayout
@@ -24,9 +23,6 @@ const phone = '+1 (604) 362-3678';
           <p class="contact-hero__desc">
             Or just reach out to <a href={`mailto:${email}`} class="contact-hero__email">{email}</a>.
           </p>
-          <div class="contact-hero__details">
-            <span class="contact-hero__detail">{phone}</span>
-          </div>
         </div>
       </div>
     </section>
@@ -100,13 +96,6 @@ const phone = '+1 (604) 362-3678';
     max-width: var(--text-measure);
   }
 
-  .contact-hero__details {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    margin-top: var(--space-8);
-  }
-
   .contact-hero__email {
     color: var(--color-ink);
     text-decoration: underline;
@@ -118,10 +107,6 @@ const phone = '+1 (604) 362-3678';
     color: var(--color-accent);
   }
 
-  .contact-hero__detail {
-    font-size: var(--text-lg);
-    color: var(--color-ink);
-  }
 
   .contact-form-section {
     padding-block: var(--space-16);
