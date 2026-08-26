@@ -1,10 +1,4 @@
 ---
-// Single-page flipbook with hard page flip animation.
-// Each page fills the full container width for maximum readability.
-// CSS 3D rotateY around the left edge (transform-origin: left center)
-// gives a rigid page-turn — backface-visibility: hidden makes the
-// turning page disappear past 90 degrees, revealing the next page
-// underneath.
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
@@ -27,15 +21,29 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
         <div class="flipbook__book" style={`aspect-ratio:${pageAR}`}>
           {pages.map((page, i) => (
             <div class="flipbook__page" data-page={i}>
-              <Image
-                src={page.src}
-                alt={`Page ${i + 1} of ${numPages}`}
-                widths={[400, 640, 1024, 1600]}
-                sizes="(min-width: 48rem) 88vw, 100vw"
-                loading={i < 2 ? 'eager' : 'lazy'}
-                decoding="async"
-              />
-              <span class="flipbook__shade" aria-hidden="true" />
+              <div class="flipbook__half flipbook__half--left">
+                <Image
+                  src={page.src}
+                  alt={`Page ${i + 1} of ${numPages}`}
+                  widths={[400, 640, 1024, 1600]}
+                  sizes="(min-width: 48rem) 88vw, 100vw"
+                  loading={i < 2 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              </div>
+              <div class="flipbook__half flipbook__half--right">
+                <Image
+                  src={page.src}
+                  alt=""
+                  aria-hidden="true"
+                  widths={[400, 640, 1024, 1600]}
+                  sizes="(min-width: 48rem) 88vw, 100vw"
+                  loading={i < 2 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+                <span class="flipbook__fold-shadow" aria-hidden="true" />
+              </div>
+              <span class="flipbook__crease" aria-hidden="true" />
             </div>
           ))}
 
@@ -96,7 +104,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
   .flipbook__book {
     position: relative;
     width: 100%;
-    perspective: 2000px;
+    perspective: 1800px;
     perspective-origin: 50% 50%;
     background: #fff;
     border: 1px solid var(--color-hairline);
@@ -107,26 +115,71 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
   .flipbook__page {
     position: absolute;
     inset: 0;
-    transform-origin: center center;
-    backface-visibility: hidden;
-    overflow: hidden;
     background: #fff;
+  }
+
+  .flipbook__half {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 50%;
+    overflow: hidden;
+  }
+
+  .flipbook__half--left {
+    left: 0;
+  }
+
+  .flipbook__half--right {
+    left: 50%;
+    transform-origin: left center;
+    backface-visibility: hidden;
     will-change: transform;
   }
 
-  .flipbook__page :global(img) {
+  .flipbook__half :global(img) {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
   }
 
-  .flipbook__shade {
+  .flipbook__half--left :global(img) {
+    object-position: left center;
+  }
+
+  .flipbook__half--right :global(img) {
+    object-position: right center;
+  }
+
+  .flipbook__fold-shadow {
     position: absolute;
-    inset: 0;
+    left: -12px;
+    top: 0;
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.25), transparent 70%);
     opacity: 0;
     pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15), transparent 60%);
+  }
+
+  .flipbook__crease {
+    position: absolute;
+    top: 0;
+    left: calc(50% - 20px);
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(0, 0, 0, 0.04) 35%,
+      rgba(0, 0, 0, 0.1) 50%,
+      rgba(0, 0, 0, 0.04) 65%,
+      transparent
+    );
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
   }
 
   .flipbook__zone {
@@ -144,35 +197,51 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
   .flipbook__zone--right { right: 0; }
   .flipbook__zone[disabled] { cursor: default; }
 
-  .flipbook__page.is-flipping-forward {
-    animation: flip-forward 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
+  .flipbook__page.is-folding-forward .flipbook__half--right {
+    animation: fold-forward 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
   }
-  .flipbook__page.is-flipping-back {
-    animation: flip-back 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
-  }
-
-  .flipbook__page.is-flipping-forward .flipbook__shade {
-    animation: shade-peak 700ms ease forwards;
+  .flipbook__page.is-folding-back .flipbook__half--right {
+    animation: fold-back 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
   }
 
-  @keyframes flip-forward {
+  .flipbook__page.is-folding-forward .flipbook__fold-shadow,
+  .flipbook__page.is-folding-back .flipbook__fold-shadow {
+    animation: shadow-peak 700ms ease forwards;
+  }
+
+  .flipbook__page.is-folding-forward .flipbook__crease,
+  .flipbook__page.is-folding-back .flipbook__crease {
+    animation: crease-peak 700ms ease forwards;
+  }
+
+  @keyframes fold-forward {
     from { transform: rotateY(0deg); }
     to   { transform: rotateY(-180deg); }
   }
-  @keyframes flip-back {
+  @keyframes fold-back {
     from { transform: rotateY(-180deg); }
     to   { transform: rotateY(0deg); }
   }
-  @keyframes shade-peak {
+  @keyframes shadow-peak {
     0%   { opacity: 0; }
-    50%  { opacity: 1; }
+    35%  { opacity: 1; }
+    65%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes crease-peak {
+    0%   { opacity: 0; }
+    25%  { opacity: 1; }
+    75%  { opacity: 1; }
     100% { opacity: 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .flipbook__page.is-flipping-forward,
-    .flipbook__page.is-flipping-back,
-    .flipbook__page.is-flipping-forward .flipbook__shade {
+    .flipbook__page.is-folding-forward .flipbook__half--right,
+    .flipbook__page.is-folding-back .flipbook__half--right,
+    .flipbook__page.is-folding-forward .flipbook__fold-shadow,
+    .flipbook__page.is-folding-back .flipbook__fold-shadow,
+    .flipbook__page.is-folding-forward .flipbook__crease,
+    .flipbook__page.is-folding-back .flipbook__crease {
       animation-duration: 1ms;
     }
   }
@@ -298,7 +367,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
       const nextBtns = [...book.querySelectorAll<HTMLButtonElement>('[data-next]')];
 
       let current = 0;
-      let turning: { el: HTMLElement; target: number } | null = null;
+      let turning: { el: HTMLElement; rightHalf: HTMLElement; target: number } | null = null;
 
       const setZ = () => {
         pageEls.forEach((el, i) => {
@@ -308,7 +377,15 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
 
       const settle = () => {
         pageEls.forEach((el, i) => {
-          el.style.transform = i < current ? 'rotateY(-180deg)' : 'rotateY(0deg)';
+          const right = el.querySelector<HTMLElement>('.flipbook__half--right')!;
+          const left = el.querySelector<HTMLElement>('.flipbook__half--left')!;
+          if (i < current) {
+            right.style.transform = 'rotateY(-180deg)';
+            left.style.visibility = 'hidden';
+          } else {
+            right.style.transform = 'rotateY(0deg)';
+            left.style.visibility = '';
+          }
           if (Math.abs(i - current) <= 1) {
             el.querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
               .forEach((img) => { img.loading = 'eager'; });
@@ -333,7 +410,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
         current = target;
         turning = null;
         settle();
-        el.classList.remove('is-flipping-forward', 'is-flipping-back');
+        el.classList.remove('is-folding-forward', 'is-folding-back');
         paintChrome(current);
       };
 
@@ -352,11 +429,20 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
         const forward = next > current;
         const idx = forward ? current : current - 1;
         const el = pageEls[idx];
+        const rightHalf = el.querySelector<HTMLElement>('.flipbook__half--right')!;
+        const leftHalf = el.querySelector<HTMLElement>('.flipbook__half--left')!;
 
         el.style.zIndex = String(numPages + 1);
-        el.style.transform = '';
-        el.classList.add(forward ? 'is-flipping-forward' : 'is-flipping-back');
-        turning = { el, target: next };
+        rightHalf.style.transform = '';
+
+        if (forward) {
+          leftHalf.style.visibility = 'hidden';
+        } else {
+          leftHalf.style.visibility = '';
+        }
+
+        el.classList.add(forward ? 'is-folding-forward' : 'is-folding-back');
+        turning = { el, rightHalf, target: next };
         paintChrome(next);
 
         if (idx + 1 < numPages) {
@@ -365,8 +451,8 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
         }
 
         const ref = turning;
-        el.onanimationend = (e: AnimationEvent) => {
-          if (e.target !== el) return;
+        rightHalf.onanimationend = (e: AnimationEvent) => {
+          if (e.target !== rightHalf) return;
           if (turning === ref) finishTurn();
         };
         setTimeout(() => { if (turning === ref) finishTurn(); }, 900);
