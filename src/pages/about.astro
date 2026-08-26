@@ -252,7 +252,7 @@ const extras: { years: string; text: string; note?: string; href?: string }[] = 
                 }
               </div>
             </div>
-            <span class="evolution__arrow" aria-hidden="true">&rarr;</span>
+            <button type="button" class="evolution__arrow" data-evolution-scroll aria-label="Scroll sketch">&rarr;</button>
           </section>
         </div>
       </div>
@@ -615,11 +615,17 @@ const extras: { years: string; text: string; note?: string; href?: string }[] = 
 
   .evolution__arrow {
     display: block;
-    text-align: right;
+    margin-left: auto;
     font-size: var(--text-lg);
     font-weight: 400;
     color: var(--color-accent);
     padding-top: var(--space-3);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .evolution__arrow:hover {
+    color: var(--color-accent-hover);
   }
 
   /* --- Titled blocks ----------------------------------------------------- */
@@ -897,6 +903,19 @@ const extras: { years: string; text: string; note?: string; href?: string }[] = 
     };
     rail.addEventListener('pointerup', stopDrag);
     rail.addEventListener('pointercancel', stopDrag);
+
+    const scrollBtn = document.querySelector<HTMLButtonElement>('[data-evolution-scroll]');
+    if (scrollBtn) {
+      const step = () => {
+        const atEnd = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 10;
+        if (atEnd) {
+          rail.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          rail.scrollBy({ left: rail.clientWidth * 0.6, behavior: 'smooth' });
+        }
+      };
+      scrollBtn.addEventListener('click', step);
+    }
   }
 
   document.addEventListener('astro:page-load', bindEvolution);
