@@ -23,49 +23,34 @@ sections:
   #
   # VANESSA — the paragraph goes on the `text:` line below. Type it between
   # the quotes and it fills the right-hand column. Use \n for a paragraph
-  # break. Left empty for now, so the space is held but nothing draft-y is
-  # published in the meantime.
+  # break. Left empty for now so the space is held.
   - images:
       - src: ./intro-location-map.png
     textBeside: true
     text: ""
 
-  - text: "Part 1: Final Studio on Landscape Urbanism"
-
-  - flipbook:
-      - src: ./part1-03.jpg
-      - src: ./part1-04.jpg
-      - src: ./part1-05.jpg
-      - src: ./part1-06.jpg
-      - src: ./part1-07.jpg
-      - src: ./part1-07a.jpg
-      - src: ./part1-07b.jpg
-      - src: ./part1-08.jpg
-      - src: ./part1-09.jpg
-      - src: ./part1-10.jpg
-      - src: ./part1-11.jpg
-      - src: ./part1-12.jpg
-
-  # The title render stands on its own, ahead of the thesis book.
+  # The title render stands on its own, ahead of the book.
   - images:
-      - src: ./part2-49.png
+      - src: ./render-49.png
 
-  - text: "Part 2: Master's Thesis"
-
+  # The whole booklet as one page-turner.
   - flipbook:
-      - src: ./part2-50.jpg
-      - src: ./part2-51.jpg
-      - src: ./part2-52.jpg
-      - src: ./part2-53.jpg
-      - src: ./part2-54.jpg
-      - src: ./part2-55.jpg
-      - src: ./part2-56.jpg
-      - src: ./part2-57.jpg
-      - src: ./part2-58.jpg
-      - src: ./part2-59.jpg
-      - src: ./part2-60.jpg
-      - src: ./part2-61.jpg
-      - src: ./part2-62.jpg
-      - src: ./part2-63.jpg
-      - src: ./part2-64.jpg
+      - src: ./page-03.jpg
+      - src: ./page-04.jpg
+      - src: ./page-05.jpg
+      - src: ./page-50.jpg
+      - src: ./page-51.jpg
+      - src: ./page-52.jpg
+      - src: ./page-53.jpg
+      - src: ./page-54.jpg
+      - src: ./page-55.jpg
+      - src: ./page-56.jpg
+      - src: ./page-57.jpg
+      - src: ./page-58.jpg
+      - src: ./page-59.jpg
+      - src: ./page-60.jpg
+      - src: ./page-61.jpg
+      - src: ./page-62.jpg
+      - src: ./page-63.jpg
+      - src: ./page-64.jpg
 ---
