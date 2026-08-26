@@ -5,7 +5,7 @@ category: academic
 code: "01"
 tag: "Italy"
 stage: "Master's Thesis"
-description: "After centuries of agricultural and industrial expansion in the Po Valley, we investigate the history, culture, and existing conditions of the Basin, and in turn, present a collection of nature-based solutions in varying scales to establish ecological connections and transition towards sustainable and resilient land use."
+description: ""
 facts:
   affiliation: "Politecnico di Milano"
   projectType: "Master's Thesis"
@@ -27,7 +27,7 @@ sections:
   - images:
       - src: ./intro-location-map.png
     textBeside: true
-    text: ""
+    text: "After centuries of agricultural and industrial expansion in the Po Valley, we investigate the history, culture, and existing conditions of the Basin, and in turn, present a collection of nature-based solutions in varying scales to establish ecological connections and transition towards sustainable and resilient land use."
 
   # The whole booklet as one page-turner.
   - flipbook:

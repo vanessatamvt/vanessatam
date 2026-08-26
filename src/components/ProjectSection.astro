@@ -619,6 +619,28 @@ const videoId = youtubeId(video);
     margin-top: 1em;
   }
 
+  /* Scroll-reveal: map slides from left, text from right, meeting at center.
+     The data attribute is set by JS so the hidden state only applies when the
+     observer is active — no JS means no animation and visible content. */
+  .project-section__beside[data-animate-beside] {
+    overflow: hidden;
+  }
+  .project-section__beside[data-animate-beside] .project-section__beside-figure {
+    opacity: 0;
+    transform: translateX(-100%);
+    transition: opacity 0.7s ease 0.05s, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.05s;
+  }
+  .project-section__beside[data-animate-beside] .project-section__beside-text {
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.7s ease 0.15s, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+  }
+  .project-section__beside[data-animate-beside].is-revealed .project-section__beside-figure,
+  .project-section__beside[data-animate-beside].is-revealed .project-section__beside-text {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
   /* Stack on narrow screens — drawing first, then the prose, which is the
      order they're read in anyway. */
   @media (max-width: 48rem) {
@@ -629,6 +651,22 @@ const videoId = youtubeId(video);
     .project-section__beside-figure {
       width: 60%;
       margin-bottom: var(--space-6);
+    }
+
+    .project-section__beside[data-animate-beside] .project-section__beside-figure {
+      transform: translateX(-60%);
+    }
+    .project-section__beside[data-animate-beside] .project-section__beside-text {
+      transform: translateX(60%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .project-section__beside[data-animate-beside] .project-section__beside-figure,
+    .project-section__beside[data-animate-beside] .project-section__beside-text {
+      opacity: 1;
+      transform: none;
+      transition: none;
     }
   }
 
@@ -973,4 +1011,29 @@ const videoId = youtubeId(video);
   }
 
   document.addEventListener('astro:page-load', initVideoAutoplay);
+
+  function initBesideReveal() {
+    const besides = document.querySelectorAll<HTMLElement>('.project-section__beside');
+    if (besides.length === 0) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: '-35% 0px -35% 0px' },
+    );
+
+    besides.forEach((el) => {
+      el.dataset.animateBeside = '';
+      observer.observe(el);
+    });
+  }
+
+  document.addEventListener('astro:page-load', initBesideReveal);
 </script>

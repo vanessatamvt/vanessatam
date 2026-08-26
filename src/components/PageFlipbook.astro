@@ -1,115 +1,123 @@
 ---
-// An issuu-style page-turner for a run of book pages — used where a project
-// carries a whole exported booklet and stacking eighteen full-width scans down
-// the page would bury the rest of the project.
-//
-// Every page is rendered up front and stacked absolutely inside one stage, so
-// turning never reflows the page; only the turning leaf moves. The stage sits
-// inside a frame with its own margin, so the current page reads as a sheet
-// centred on the page rather than a full-bleed band.
+// Two-page spread flipbook with hard page flip around a center spine.
+// Pages are paired into sheets: each sheet has a front (right-side page) and
+// a back (left-side page once the sheet is turned). CSS 3D rotateY around
+// the spine (transform-origin: left center on the right-half-positioned sheet)
+// gives a rigid page-turn that matches the StPageFlip "hard" mode.
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
 interface Props {
   pages: { src: ImageMetadata }[];
   title?: string;
-  /** Aspect ratio of the stage, w/h. Defaults to the commonest page shape in
-   *  the run, so the stage fits the majority of pages exactly. */
-  ratio?: number;
 }
-const { pages, title, ratio } = Astro.props;
-const counts = new Map<number, number>();
-for (const p of pages) {
-  const r = Math.round((p.src.width / p.src.height) * 100) / 100;
-  counts.set(r, (counts.get(r) ?? 0) + 1);
+
+const { pages, title } = Astro.props;
+
+const sheets: { front: ImageMetadata; back: ImageMetadata | null }[] = [];
+for (let i = 0; i < pages.length; i += 2) {
+  sheets.push({
+    front: pages[i].src,
+    back: i + 1 < pages.length ? pages[i + 1].src : null,
+  });
 }
-const commonest = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 1.414;
-const stageRatio = ratio ?? commonest;
-const pad = (n: number) => String(n).padStart(2, '0');
+
+const numSheets = sheets.length;
+const lastHasBack = numSheets > 0 && !!sheets[numSheets - 1].back;
+const maxTurned = lastHasBack ? numSheets : Math.max(numSheets - 1, 0);
+const totalPositions = maxTurned + 1;
+const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
+const spreadAR = 2 * pageAR;
 ---
 
-{
-  pages.length > 0 && (
-    <section class="flipbook-section">
-      <div class="container">
-        {title && <h3 class="flipbook__title">{title}</h3>}
+{pages.length > 0 && (
+  <section class="flipbook-section">
+    <div class="container">
+      {title && <h3 class="flipbook__title">{title}</h3>}
 
-        <div class="flipbook" data-flipbook data-count={pages.length}>
-          <div class="flipbook__frame">
-            <div class="flipbook__stage" style={`aspect-ratio:${stageRatio}`}>
-              {pages.map((p, i) => (
-                <div class="flipbook__page" data-page={i} data-state={i === 0 ? 'current' : 'after'}>
-                  {/* The leaf is what rotates. It's two-sided: the scan on the
-                      front, blank stock behind, so past 90° you see the back
-                      of the sheet swinging over rather than the page blinking
-                      out. */}
-                  <div class="flipbook__leaf">
-                    <div class="flipbook__face">
-                      <Image
-                        src={p.src}
-                        alt={`Page ${i + 1} of ${pages.length}`}
-                        widths={[640, 1024, 1600, 2400]}
-                        sizes="(min-width: 48rem) 88vw, 100vw"
-                        loading={i < 2 ? 'eager' : 'lazy'}
-                        decoding="async"
-                      />
-                      <span class="flipbook__shade" aria-hidden="true" />
-                    </div>
-                    <div class="flipbook__back" aria-hidden="true" />
-                  </div>
-                </div>
-              ))}
+      <div class="flipbook" data-flipbook data-num-sheets={numSheets}
+           data-max-turned={maxTurned} data-total-pages={pages.length}>
+        <div class="flipbook__book" style={`aspect-ratio:${spreadAR}`}>
+          <div class="flipbook__endpaper flipbook__endpaper--left" aria-hidden="true" />
+          <div class="flipbook__endpaper flipbook__endpaper--right" aria-hidden="true" />
 
-              <button class="flipbook__edge flipbook__edge--prev" data-prev aria-label="Previous page" />
-              <button class="flipbook__edge flipbook__edge--next" data-next aria-label="Next page" />
+          {sheets.map((sheet, i) => (
+            <div class="flipbook__sheet" data-sheet={i}>
+              <div class="flipbook__face flipbook__face--front">
+                <Image
+                  src={sheet.front}
+                  alt={`Page ${i * 2 + 1} of ${pages.length}`}
+                  widths={[400, 640, 1024, 1600]}
+                  sizes="(min-width: 48rem) 44vw, 50vw"
+                  loading={i < 2 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+                <span class="flipbook__shade" aria-hidden="true" />
+              </div>
+              <div class="flipbook__face flipbook__face--back">
+                {sheet.back ? (
+                  <Image
+                    src={sheet.back}
+                    alt={`Page ${i * 2 + 2} of ${pages.length}`}
+                    widths={[400, 640, 1024, 1600]}
+                    sizes="(min-width: 48rem) 44vw, 50vw"
+                    loading={i < 2 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                ) : (
+                  <div class="flipbook__blank" />
+                )}
+                <span class="flipbook__shade" aria-hidden="true" />
+              </div>
             </div>
-          </div>
+          ))}
 
-          {/* Arrows either side of a scrubbable track, after the photo
-              journal's chapter controls. */}
-          <div class="flipbook__controls">
-            <button class="flipbook__arrow" type="button" data-prev aria-label="Previous page">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4l-8 8 8 8" /></svg>
-            </button>
-
-            <div
-              class="flipbook__slider"
-              data-slider
-              role="slider"
-              tabindex="0"
-              aria-label="Page"
-              aria-valuemin="1"
-              aria-valuemax={pages.length}
-              aria-valuenow="1"
-            >
-              <span class="flipbook__rail" aria-hidden="true" />
-              <span class="flipbook__fill" data-fill aria-hidden="true" />
-              <span class="flipbook__ticks" aria-hidden="true">
-                {pages.map((_, i) => (
-                  <span class="flipbook__tick" data-tick data-index={i} />
-                ))}
-              </span>
-              <span class="flipbook__knob" data-knob aria-hidden="true" />
-            </div>
-
-            <button class="flipbook__arrow" type="button" data-next aria-label="Next page">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4l8 8-8 8" /></svg>
-            </button>
-          </div>
-
-          <p class="flipbook__count">
-            <span data-count-label>{pad(1)}</span> / {pad(pages.length)}
-          </p>
+          <div class="flipbook__spine" aria-hidden="true" />
+          <button class="flipbook__zone flipbook__zone--left" data-prev
+                  aria-label="Previous spread" />
+          <button class="flipbook__zone flipbook__zone--right" data-next
+                  aria-label="Next spread" />
         </div>
+
+        <div class="flipbook__controls">
+          <button class="flipbook__arrow" type="button" data-prev
+                  aria-label="Previous spread">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 4l-8 8 8 8" />
+            </svg>
+          </button>
+
+          <div class="flipbook__slider" data-slider role="slider" tabindex="0"
+               aria-label="Spread" aria-valuemin="1"
+               aria-valuemax={totalPositions} aria-valuenow="1">
+            <span class="flipbook__rail" aria-hidden="true" />
+            <span class="flipbook__fill" data-fill aria-hidden="true" />
+            <span class="flipbook__ticks" aria-hidden="true">
+              {Array.from({ length: totalPositions }, (_, i) => (
+                <span class="flipbook__tick" data-tick data-index={i} />
+              ))}
+            </span>
+            <span class="flipbook__knob" data-knob aria-hidden="true" />
+          </div>
+
+          <button class="flipbook__arrow" type="button" data-next
+                  aria-label="Next spread">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 4l8 8-8 8" />
+            </svg>
+          </button>
+        </div>
+
+        <p class="flipbook__count">
+          <span data-count-label>1</span>&thinsp;/&thinsp;{pages.length}
+        </p>
       </div>
-    </section>
-  )
-}
+    </div>
+  </section>
+)}
 
 <style>
-  .flipbook-section {
-    padding-block: var(--space-8);
-  }
+  .flipbook-section { padding-block: var(--space-8); }
 
   .flipbook__title {
     margin-bottom: var(--space-4);
@@ -119,62 +127,68 @@ const pad = (n: number) => String(n).padStart(2, '0');
     color: var(--color-ink);
   }
 
-  /* The frame IS the sheet. Its ground is the same white the scanned pages
-     are printed on, so the page's own white runs out to the border instead of
-     stopping short against the site's cream — the margin reads as the paper's
-     margin rather than a gap around a pasted-in image. */
-  .flipbook__frame {
-    --flipbook-paper: #fff;
-    padding: clamp(var(--space-4), 3vw, var(--space-12));
-    background: var(--flipbook-paper);
-    border: 1px solid var(--color-hairline);
-  }
-
-  /* Anything the contain-fit leaves over at the stage edge is paper too, so a
-     page whose proportions differ a hair from the stage can't show a seam. */
-  .flipbook__stage,
-  .flipbook__face {
-    background: var(--flipbook-paper);
-  }
-
-  /* Perspective is anchored at the spine so a turning sheet recedes the way a
-     real page does instead of scaling uniformly. */
-  .flipbook__stage {
+  .flipbook__book {
     position: relative;
     width: 100%;
-    perspective: 2400px;
-    perspective-origin: left center;
+    perspective: 2000px;
+    perspective-origin: 50% 50%;
+    background: #fff;
+    border: 1px solid var(--color-hairline);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
   }
 
-  .flipbook__page {
+  .flipbook__endpaper {
     position: absolute;
-    inset: 0;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    z-index: 0;
+  }
+  .flipbook__endpaper--left {
+    left: 0;
+    background: linear-gradient(to right, #eae3d4, #efe9db);
+  }
+  .flipbook__endpaper--right {
+    right: 0;
+    background: linear-gradient(to left, #eae3d4, #efe9db);
   }
 
-  .flipbook__leaf {
+  .flipbook__sheet {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
     transform-origin: left center;
     transform-style: preserve-3d;
+    will-change: transform;
   }
 
-  .flipbook__face,
-  .flipbook__back {
+  .flipbook__face--front,
+  .flipbook__face--back {
     position: absolute;
     inset: 0;
     backface-visibility: hidden;
+    overflow: hidden;
+    background: #fff;
+  }
+  .flipbook__face--back {
+    transform: rotateY(180deg);
   }
 
-  .flipbook__face :global(img) {
+  .flipbook__face--front :global(img),
+  .flipbook__face--back :global(img) {
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
   }
 
-  .flipbook__back {
-    transform: rotateY(180deg);
-    background: linear-gradient(to left, #efe9db 0%, #e4dccb 55%, #d9d0bd 100%);
+  .flipbook__blank {
+    width: 100%;
+    height: 100%;
+    background: #fff;
   }
 
   .flipbook__shade {
@@ -182,83 +196,82 @@ const pad = (n: number) => String(n).padStart(2, '0');
     inset: 0;
     opacity: 0;
     pointer-events: none;
-    background: linear-gradient(to left, rgba(28, 26, 22, 0) 55%, rgba(28, 26, 22, 0.42) 100%);
+  }
+  .flipbook__face--front .flipbook__shade {
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.25), transparent 50%);
+  }
+  .flipbook__face--back .flipbook__shade {
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.25), transparent 50%);
   }
 
-  .flipbook__page[data-state='after'],
-  .flipbook__page[data-state='before'] {
-    z-index: 1;
-    visibility: hidden;
-  }
-
-  .flipbook__page[data-state='current'] {
-    z-index: 2;
-  }
-
-  .flipbook__page[data-state='before'] .flipbook__leaf {
-    transform: rotateY(-180deg);
-  }
-
-  /* The turn: slow enough to read as paper, unhurried at both ends and
-     quickest through the middle, which is how a turned page actually moves. */
-  .flipbook__page[data-turning] {
-    z-index: 5;
-    visibility: visible;
-  }
-
-  .flipbook__page[data-turning='forward'] .flipbook__leaf {
-    animation: leaf-forward 1150ms cubic-bezier(0.62, 0.02, 0.36, 1) forwards;
-  }
-
-  .flipbook__page[data-turning='back'] .flipbook__leaf {
-    animation: leaf-back 1150ms cubic-bezier(0.62, 0.02, 0.36, 1) forwards;
-  }
-
-  .flipbook__page[data-turning='forward'] .flipbook__shade {
-    animation: shade-forward 1150ms cubic-bezier(0.62, 0.02, 0.36, 1) forwards;
-  }
-
-  .flipbook__page[data-turning='back'] .flipbook__shade {
-    animation: shade-back 1150ms cubic-bezier(0.62, 0.02, 0.36, 1) forwards;
-  }
-
-  @keyframes leaf-forward {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(-180deg); }
-  }
-
-  @keyframes leaf-back {
-    from { transform: rotateY(-180deg); }
-    to { transform: rotateY(0deg); }
-  }
-
-  @keyframes shade-forward {
-    0% { opacity: 0; }
-    70% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  @keyframes shade-back {
-    0% { opacity: 0; }
-    30% { opacity: 1; }
-    100% { opacity: 0; }
-  }
-
-  .flipbook__edge {
+  .flipbook__spine {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 24%;
-    z-index: 6;
+    left: 50%;
+    width: 8px;
+    transform: translateX(-50%);
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(0, 0, 0, 0.04) 25%,
+      rgba(0, 0, 0, 0.10) 50%,
+      rgba(0, 0, 0, 0.04) 75%,
+      transparent
+    );
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  .flipbook__zone {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    z-index: 60;
     padding: 0;
     border: 0;
     background: none;
     cursor: pointer;
   }
+  .flipbook__zone--left { left: 0; }
+  .flipbook__zone--right { right: 0; }
+  .flipbook__zone[disabled] { cursor: default; }
 
-  .flipbook__edge--prev { left: 0; }
-  .flipbook__edge--next { right: 0; }
-  .flipbook__edge[disabled] { cursor: default; }
+  .flipbook__sheet.is-flipping-forward {
+    animation: flip-forward 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
+  }
+  .flipbook__sheet.is-flipping-back {
+    animation: flip-back 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
+  }
+
+  .flipbook__sheet.is-flipping-forward .flipbook__face--front .flipbook__shade,
+  .flipbook__sheet.is-flipping-back .flipbook__face--back .flipbook__shade {
+    animation: shade-peak 700ms ease forwards;
+  }
+
+  @keyframes flip-forward {
+    from { transform: rotateY(0deg); }
+    to   { transform: rotateY(-180deg); }
+  }
+  @keyframes flip-back {
+    from { transform: rotateY(-180deg); }
+    to   { transform: rotateY(0deg); }
+  }
+  @keyframes shade-peak {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flipbook__sheet.is-flipping-forward,
+    .flipbook__sheet.is-flipping-back,
+    .flipbook__sheet.is-flipping-forward .flipbook__shade,
+    .flipbook__sheet.is-flipping-back .flipbook__shade {
+      animation-duration: 1ms;
+    }
+  }
 
   .flipbook__controls {
     display: flex;
@@ -279,12 +292,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
     background: none;
     cursor: pointer;
     color: var(--color-accent);
-    transition:
-      color var(--duration-fast, 160ms) ease,
-      border-color var(--duration-fast, 160ms) ease,
-      opacity var(--duration-fast, 160ms) ease;
+    transition: color 160ms ease, border-color 160ms ease, opacity 160ms ease;
   }
-
   .flipbook__arrow svg {
     width: 1.15rem;
     height: 1.15rem;
@@ -294,18 +303,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-
   .flipbook__arrow:hover:not([disabled]) {
     color: var(--color-accent-hover);
     border-color: var(--color-accent);
   }
-
   .flipbook__arrow[disabled] {
     opacity: 0.3;
     cursor: default;
   }
 
-  /* Scrub track: click or drag anywhere along it to go straight to a page. */
   .flipbook__slider {
     position: relative;
     flex: 1 1 auto;
@@ -313,7 +319,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
     cursor: pointer;
     touch-action: none;
   }
-
   .flipbook__rail,
   .flipbook__fill {
     position: absolute;
@@ -322,18 +327,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
     height: 2px;
     transform: translateY(-50%);
   }
-
   .flipbook__rail {
     width: 100%;
     background: var(--color-hairline);
   }
-
   .flipbook__fill {
     width: 0;
     background: var(--color-accent);
     transition: width 200ms ease;
   }
-
   .flipbook__ticks {
     position: absolute;
     inset: 0;
@@ -341,13 +343,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
     align-items: center;
     justify-content: space-between;
   }
-
   .flipbook__tick {
     width: 1px;
     height: 7px;
     background: var(--color-hairline);
   }
-
   .flipbook__knob {
     position: absolute;
     top: 50%;
@@ -360,12 +360,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
     transform: translateY(-50%);
     transition: left 200ms ease;
   }
-
   .flipbook__slider:focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 4px;
   }
-
   .flipbook.is-scrubbing .flipbook__fill,
   .flipbook.is-scrubbing .flipbook__knob {
     transition: none;
@@ -379,156 +377,159 @@ const pad = (n: number) => String(n).padStart(2, '0');
     letter-spacing: 0.08em;
     color: var(--color-muted);
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .flipbook__page[data-turning] .flipbook__leaf,
-    .flipbook__page[data-turning] .flipbook__shade {
-      animation-duration: 1ms;
-    }
-  }
 </style>
 
 <script>
-  document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((book) => {
-    const pages = [...book.querySelectorAll<HTMLElement>('.flipbook__page')];
-    const label = book.querySelector<HTMLElement>('[data-count-label]');
-    const fill = book.querySelector<HTMLElement>('[data-fill]');
-    const knob = book.querySelector<HTMLElement>('[data-knob]');
-    const slider = book.querySelector<HTMLElement>('[data-slider]');
-    const prevs = [...book.querySelectorAll<HTMLButtonElement>('[data-prev]')];
-    const nexts = [...book.querySelectorAll<HTMLButtonElement>('[data-next]')];
-    const total = pages.length;
-    if (!total) return;
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((book) => {
+      const sheetEls = [...book.querySelectorAll<HTMLElement>('.flipbook__sheet')];
+      const numSheets = Number(book.dataset.numSheets);
+      const maxTurned = Number(book.dataset.maxTurned);
+      const totalPages = Number(book.dataset.totalPages);
+      const totalPos = maxTurned + 1;
 
-    const pad = (n: number) => String(n).padStart(2, '0');
-    let index = 0;
-    // The leaf currently mid-turn, if any. A new navigation finishes it on the
-    // spot rather than being dropped — clicking ahead should always register.
-    let turning: { page: HTMLElement; target: number } | null = null;
+      const label = book.querySelector<HTMLElement>('[data-count-label]');
+      const fill = book.querySelector<HTMLElement>('[data-fill]');
+      const knob = book.querySelector<HTMLElement>('[data-knob]');
+      const slider = book.querySelector<HTMLElement>('[data-slider]');
+      const prevBtns = [...book.querySelectorAll<HTMLButtonElement>('[data-prev]')];
+      const nextBtns = [...book.querySelectorAll<HTMLButtonElement>('[data-next]')];
 
-    const paintPages = () => {
-      pages.forEach((page, i) => {
-        page.dataset.state = i < index ? 'before' : i === index ? 'current' : 'after';
-        if (Math.abs(i - index) <= 1) {
-          const img = page.querySelector('img');
-          if (img?.loading === 'lazy') img.loading = 'eager';
+      let turned = 0;
+      let turning: { el: HTMLElement; target: number } | null = null;
+
+      const setZ = () => {
+        sheetEls.forEach((el, i) => {
+          el.style.zIndex = String(i < turned ? i + 1 : turned + numSheets - i);
+        });
+      };
+
+      const settle = () => {
+        sheetEls.forEach((el, i) => {
+          el.style.transform = i < turned ? 'rotateY(-180deg)' : 'rotateY(0deg)';
+          if (Math.abs(i - turned) <= 1) {
+            el.querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
+              .forEach((img) => { img.loading = 'eager'; });
+          }
+        });
+        setZ();
+      };
+
+      const paintChrome = (shown: number) => {
+        if (label) {
+          if (shown === 0) {
+            label.textContent = '1';
+          } else {
+            const l = shown * 2;
+            const r = l + 1;
+            label.textContent = r <= totalPages
+              ? `${l} – ${r}` : String(l);
+          }
         }
+        const pct = totalPos > 1 ? (shown / (totalPos - 1)) * 100 : 0;
+        if (fill) fill.style.width = `${pct}%`;
+        if (knob) knob.style.left = `${pct}%`;
+        slider?.setAttribute('aria-valuenow', String(shown + 1));
+        prevBtns.forEach((b) => { b.disabled = shown === 0; });
+        nextBtns.forEach((b) => { b.disabled = shown >= maxTurned; });
+      };
+
+      const finishTurn = () => {
+        if (!turning) return;
+        const { el, target } = turning;
+        turned = target;
+        turning = null;
+        settle();
+        el.classList.remove('is-flipping-forward', 'is-flipping-back');
+        paintChrome(turned);
+      };
+
+      const flipTo = (target: number, animate: boolean) => {
+        const next = Math.max(0, Math.min(target, maxTurned));
+        finishTurn();
+        if (next === turned) return;
+
+        if (!animate || Math.abs(next - turned) !== 1) {
+          turned = next;
+          settle();
+          paintChrome(turned);
+          return;
+        }
+
+        const forward = next > turned;
+        const idx = forward ? turned : turned - 1;
+        const el = sheetEls[idx];
+
+        el.style.zIndex = String(2 * numSheets + 1);
+        el.style.transform = '';
+        el.classList.add(forward ? 'is-flipping-forward' : 'is-flipping-back');
+        turning = { el, target: next };
+        paintChrome(next);
+
+        if (idx + 1 < numSheets) {
+          sheetEls[idx + 1].querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
+            .forEach((img) => { img.loading = 'eager'; });
+        }
+
+        const ref = turning;
+        el.onanimationend = (e: AnimationEvent) => {
+          if (e.target !== el) return;
+          if (turning === ref) finishTurn();
+        };
+        setTimeout(() => { if (turning === ref) finishTurn(); }, 900);
+      };
+
+      const step = (d: number) => {
+        flipTo((turning ? turning.target : turned) + d, true);
+      };
+
+      prevBtns.forEach((b) => b.addEventListener('click', () => step(-1)));
+      nextBtns.forEach((b) => b.addEventListener('click', () => step(1)));
+
+      book.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+        if (e.key === 'Home') { e.preventDefault(); flipTo(0, false); }
+        if (e.key === 'End') { e.preventDefault(); flipTo(maxTurned, false); }
       });
-    };
 
-    // The counter, track and buttons follow the page you're heading TO, and
-    // update the moment you click — waiting for the turn to land would leave
-    // them a page behind for over a second and read as an unresponsive click.
-    const paintChrome = (shown: number) => {
-      if (label) label.textContent = pad(shown + 1);
-      const pct = total > 1 ? (shown / (total - 1)) * 100 : 0;
-      if (fill) fill.style.width = `${pct}%`;
-      if (knob) knob.style.left = `${pct}%`;
-      slider?.setAttribute('aria-valuenow', String(shown + 1));
-      prevs.forEach((b) => (b.disabled = shown === 0));
-      nexts.forEach((b) => (b.disabled = shown === total - 1));
-    };
-
-    const paint = () => {
-      paintPages();
-      paintChrome(index);
-    };
-
-    const finishTurn = () => {
-      if (!turning) return;
-      delete turning.page.dataset.turning;
-      index = turning.target;
-      turning = null;
-      paint();
-    };
-
-    const goTo = (target: number, animate: boolean) => {
-      const next = Math.min(Math.max(target, 0), total - 1);
-      // Whatever was mid-flight lands immediately, so this navigation starts
-      // from a settled book instead of being swallowed.
-      finishTurn();
-      if (next === index) return;
-
-      if (!animate || Math.abs(next - index) !== 1) {
-        index = next;
-        paint();
-        return;
+      if (slider) {
+        const posAt = (cx: number) => {
+          const r = slider.getBoundingClientRect();
+          const t = Math.max(0, Math.min((cx - r.left) / r.width, 1));
+          return Math.round(t * maxTurned);
+        };
+        let scrubbing = false;
+        slider.addEventListener('pointerdown', (e: PointerEvent) => {
+          scrubbing = true;
+          book.classList.add('is-scrubbing');
+          slider.setPointerCapture(e.pointerId);
+          flipTo(posAt(e.clientX), false);
+        });
+        slider.addEventListener('pointermove', (e: PointerEvent) => {
+          if (scrubbing) flipTo(posAt(e.clientX), false);
+        });
+        const stop = () => {
+          scrubbing = false;
+          book.classList.remove('is-scrubbing');
+        };
+        slider.addEventListener('pointerup', stop);
+        slider.addEventListener('pointercancel', stop);
       }
 
-      const forward = next > index;
-      const page = forward ? pages[index] : pages[next];
-      const beneath = pages[next];
-      beneath.dataset.state = 'current';
-      const img = beneath.querySelector('img');
-      if (img?.loading === 'lazy') img.loading = 'eager';
-      if (!forward) page.dataset.state = 'current';
+      let sx = 0, sy = 0;
+      book.addEventListener('touchstart', (e: TouchEvent) => {
+        sx = e.touches[0].clientX;
+        sy = e.touches[0].clientY;
+      }, { passive: true });
+      book.addEventListener('touchend', (e: TouchEvent) => {
+        const dx = e.changedTouches[0].clientX - sx;
+        const dy = e.changedTouches[0].clientY - sy;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
+      }, { passive: true });
 
-      page.dataset.turning = forward ? 'forward' : 'back';
-      turning = { page, target: next };
-      paintChrome(next);
-
-      const leaf = page.querySelector('.flipbook__leaf');
-      const settle = () => {
-        // Only finish if this is still the turn we started.
-        if (turning?.page === page) finishTurn();
-      };
-      leaf?.addEventListener('animationend', settle, { once: true });
-      // If the animation never fires (backgrounded tab, say), don't strand it.
-      setTimeout(settle, 1400);
-    };
-
-    // Step from whatever the book is ALREADY heading to, not from where it
-    // currently sits — otherwise a click landing mid-turn just re-targets the
-    // page being turned to and looks like it did nothing.
-    const go = (delta: number) => goTo((turning ? turning.target : index) + delta, true);
-
-    prevs.forEach((b) => b.addEventListener('click', () => go(-1)));
-    nexts.forEach((b) => b.addEventListener('click', () => go(1)));
-
-    book.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
-      if (e.key === 'Home') { e.preventDefault(); goTo(0, false); }
-      if (e.key === 'End') { e.preventDefault(); goTo(total - 1, false); }
+      settle();
+      paintChrome(turned);
     });
-
-    // Scrubbing: click or drag the track to land on a page directly.
-    if (slider) {
-      const indexAt = (clientX: number) => {
-        const r = slider.getBoundingClientRect();
-        const t = Math.min(Math.max((clientX - r.left) / r.width, 0), 1);
-        return Math.round(t * (total - 1));
-      };
-      let scrubbing = false;
-      slider.addEventListener('pointerdown', (e) => {
-        scrubbing = true;
-        book.classList.add('is-scrubbing');
-        slider.setPointerCapture(e.pointerId);
-        goTo(indexAt(e.clientX), false);
-      });
-      slider.addEventListener('pointermove', (e) => {
-        if (scrubbing) goTo(indexAt(e.clientX), false);
-      });
-      const stop = () => {
-        scrubbing = false;
-        book.classList.remove('is-scrubbing');
-      };
-      slider.addEventListener('pointerup', stop);
-      slider.addEventListener('pointercancel', stop);
-    }
-
-    let startX = 0;
-    let startY = 0;
-    book.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }, { passive: true });
-    book.addEventListener('touchend', (e) => {
-      const dx = e.changedTouches[0].clientX - startX;
-      const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
-    }, { passive: true });
-
-    paint();
   });
 </script>
