@@ -34,3 +34,6 @@ pnpm-debug.log*
 .tmp_claude_preview/
 scripts/__pycache__/
 **/__pycache__/
+
+# Vanessa's working note for the Pages source doc — local only
+/Project Descriptions — edits to make.md

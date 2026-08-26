@@ -7,7 +7,7 @@ tag: "Italy"
 stage: "Academic Studio, with Prof. Grazia Concilio"
 description: "Multi-Art in Nature — Providing Creative Opportunities for the Public Experience"
 facts:
-  affiliation: "Politecnico di Milano, with Prof. Grazia Concilio"
+  affiliation: "Politecnico di Milano"
   projectType: "Urban Design"
   program: "A public art-and-nature park: open-air galleries and art destinations across Parco Forlanini and its Via Corelli edge, part of Ri-formare Periferie Milano Metropolitana"
   fullRead: "https://www.behance.net/gallery/148939937/Grande-Parco-Forlanini-2019"
@@ -67,37 +67,37 @@ sections:
   # or shrunk to match anything else.
   - images:
       - src: ./gallery-07-urban-garden.jpg
-        caption: "The Urban Garden — an event space to introduce artworks and host gatherings, lit for evenings so the adjacent landmark buildings register at night"
       - src: ./gallery-07b-park-axo.jpg
+    sharedCaption: "The Urban Garden — an event space to introduce artworks and host gatherings, lit for evenings so the adjacent landmark buildings register at night"
 
   - images:
       - src: ./gallery-08-chromatic-garden.jpg
-        caption: "The Chromatic Garden — native species chosen to bloom in succession (cherry laurels, daisies, lilies, cherry trees, Turkish hazel), revealing nature's changing colours to passing cyclists"
       - src: ./gallery-08c-sports-entrance.jpg
+    sharedCaption: "The Chromatic Garden — native species chosen to bloom in succession (cherry laurels, daisies, lilies, cherry trees, Turkish hazel), revealing nature's changing colours to passing cyclists"
 
   - images:
       - src: ./gallery-08b-chromatic-systems.jpg
 
   - images:
       - src: ./gallery-09-artcade-a.jpg
-        caption: "The Ar(t)cade — the space beneath the highway, sheltered from rain and glare, where rows of columns become canvases and the ground behind AMSA hosts large open-air installations"
       - src: ./gallery-09-artcade-b.jpg
+    sharedCaption: "The Ar(t)cade — the space beneath the highway, sheltered from rain and glare, where rows of columns become canvases and the ground behind AMSA hosts large open-air installations"
 
   - images:
       - src: ./gallery-09c-artcade-systems.jpg
 
   - images:
       - src: ./gallery-10-wall-street-gallery-a.jpg
-        caption: "The Wall Street Gallery — continuous concrete and brick walls given over to graffiti, green street art, and projected light: the existing edge, and its transformation"
       - src: ./gallery-10-wall-street-gallery-b.jpg
+    sharedCaption: "The Wall Street Gallery — continuous concrete and brick walls given over to graffiti, green street art, and projected light: the existing edge, and its transformation"
 
   - images:
       - src: ./gallery-10c-wallstreet-systems.jpg
 
   - images:
       - src: ./gallery-11-village-of-curiosities.jpg
-        caption: "The Village of Curiosities — at Via Novegro, experimental art and murals give the quiet neighbourhood a character of its own"
       - src: ./gallery-11b-village-systems.jpg
+    sharedCaption: "The Village of Curiosities — at Via Novegro, experimental art and murals give the quiet neighbourhood a character of its own"
 
   # Closing — activation phases
   - text: "Activation unfolds in four phases: initiation and agreements with the municipalities of Milan, Novegro, and Segrate; first short-term interventions along the Via Corelli walls; long-term realisation with the first open public exhibitions and new sponsorships; and finally stabilisation, as Grande Parco Forlanini establishes its fame and draws collaborations with cultural actors such as MiArt and Green City Milano. The regeneration is designed as a continuous cycle — a new destination where Milan encounters art and nature together."

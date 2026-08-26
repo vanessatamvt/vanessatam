@@ -40,7 +40,7 @@ Three signals, in order of reliability:
 | 06 Knightsbridge | hero, detail-hero, Renderings carousel, finale, 9 story rows | **High** for renders/drawings |
 | 07 HKUST | hero + 3 story rows | **High** — all CGI/diagrams |
 | 08 R&D Twin Towers | hero + 4 story rows | **High** |
-| 09 Houhai Basement | hero + carousel | **High** |
+| 09 Houhai Urban Redevelopment | hero + carousel | **High** |
 | 10 Hyatt Mumian | hero, "The Hotel Today" carousel, 26 story rows | **High** |
 
 ## Not credited — your own work

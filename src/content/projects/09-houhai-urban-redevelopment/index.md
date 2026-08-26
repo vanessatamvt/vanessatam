@@ -1,5 +1,5 @@
 ---
-title: "Houhai Basement"
+title: "Houhai Urban Redevelopment"
 location: "Shenzhen, China"
 category: professional
 code: "09"
