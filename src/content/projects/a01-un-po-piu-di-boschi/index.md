@@ -29,12 +29,9 @@ sections:
     textBeside: true
     text: ""
 
-  # The title render stands on its own, ahead of the book.
-  - images:
-      - src: ./render-49.png
-
   # The whole booklet as one page-turner.
   - flipbook:
+      - src: ./cover-49.jpg
       - src: ./page-03.jpg
       - src: ./page-04.jpg
       - src: ./page-05.jpg
