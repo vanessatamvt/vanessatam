@@ -16,6 +16,12 @@ const { projects } = Astro.props;
   <div class="project-gallery__rail" data-gallery-rail tabindex="0" aria-label="Project gallery, scroll horizontally">
     {projects.map((project) => <ProjectCard project={project} />)}
   </div>
+  <button class="project-gallery__arrow project-gallery__arrow--left" data-gallery-prev aria-label="Scroll left" disabled>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4l-8 8 8 8" /></svg>
+  </button>
+  <button class="project-gallery__arrow project-gallery__arrow--right" data-gallery-next aria-label="Scroll right">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4l8 8-8 8" /></svg>
+  </button>
 </div>
 
 <style>
@@ -59,6 +65,57 @@ const { projects } = Astro.props;
     cursor: grabbing;
     scroll-snap-type: none;
   }
+
+  .project-gallery {
+    position: relative;
+  }
+
+  .project-gallery__arrow {
+    display: none;
+  }
+
+  @media (pointer: fine) {
+    .project-gallery__arrow {
+      display: grid;
+      place-items: center;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 0;
+      border: 1px solid var(--color-hairline);
+      border-radius: 50%;
+      background: var(--color-bg, #f6f1e4);
+      color: var(--color-accent);
+      cursor: pointer;
+      z-index: 10;
+      transition: opacity 200ms ease, border-color 160ms ease, color 160ms ease;
+    }
+    .project-gallery__arrow:hover:not([disabled]) {
+      color: var(--color-accent-hover, var(--color-accent));
+      border-color: var(--color-accent);
+    }
+    .project-gallery__arrow svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .project-gallery__arrow--left {
+      left: calc(var(--container-padding) / 2);
+    }
+    .project-gallery__arrow--right {
+      right: calc(var(--container-padding) / 2);
+    }
+    .project-gallery__arrow[disabled] {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
 </style>
 
 <script>
@@ -83,6 +140,27 @@ const { projects } = Astro.props;
   function bindGallery() {
     const rail = document.querySelector<HTMLElement>('[data-gallery-rail]');
     if (!rail) return;
+
+    const prevArrow = document.querySelector<HTMLButtonElement>('[data-gallery-prev]');
+    const nextArrow = document.querySelector<HTMLButtonElement>('[data-gallery-next]');
+
+    const updateArrows = () => {
+      if (prevArrow) prevArrow.disabled = rail.scrollLeft <= 10;
+      if (nextArrow) nextArrow.disabled = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 10;
+    };
+
+    const scrollByCard = (dir: number) => {
+      const card = rail.querySelector<HTMLElement>(':scope > *');
+      if (!card) return;
+      const gap = parseFloat(getComputedStyle(rail).gap) || 0;
+      rail.scrollBy({ left: dir * (card.offsetWidth + gap), behavior: 'smooth' });
+    };
+
+    prevArrow?.addEventListener('click', () => scrollByCard(-1));
+    nextArrow?.addEventListener('click', () => scrollByCard(1));
+
+    rail.addEventListener('scroll', () => requestAnimationFrame(updateArrows), { passive: true });
+    updateArrows();
 
     // Horizontal navigation relies on native trackpad swipe and the
     // click-and-drag handler below — deliberately NOT hijacking the mouse

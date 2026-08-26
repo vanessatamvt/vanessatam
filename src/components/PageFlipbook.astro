@@ -1,9 +1,10 @@
 ---
-// Two-page spread flipbook with hard page flip around a center spine.
-// Pages are paired into sheets: each sheet has a front (right-side page) and
-// a back (left-side page once the sheet is turned). CSS 3D rotateY around
-// the spine (transform-origin: left center on the right-half-positioned sheet)
-// gives a rigid page-turn that matches the StPageFlip "hard" mode.
+// Single-page flipbook with hard page flip animation.
+// Each page fills the full container width for maximum readability.
+// CSS 3D rotateY around the left edge (transform-origin: left center)
+// gives a rigid page-turn — backface-visibility: hidden makes the
+// turning page disappear past 90 degrees, revealing the next page
+// underneath.
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
@@ -13,21 +14,8 @@ interface Props {
 }
 
 const { pages, title } = Astro.props;
-
-const sheets: { front: ImageMetadata; back: ImageMetadata | null }[] = [];
-for (let i = 0; i < pages.length; i += 2) {
-  sheets.push({
-    front: pages[i].src,
-    back: i + 1 < pages.length ? pages[i + 1].src : null,
-  });
-}
-
-const numSheets = sheets.length;
-const lastHasBack = numSheets > 0 && !!sheets[numSheets - 1].back;
-const maxTurned = lastHasBack ? numSheets : Math.max(numSheets - 1, 0);
-const totalPositions = maxTurned + 1;
+const numPages = pages.length;
 const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
-const spreadAR = 2 * pageAR;
 ---
 
 {pages.length > 0 && (
@@ -35,65 +23,43 @@ const spreadAR = 2 * pageAR;
     <div class="container">
       {title && <h3 class="flipbook__title">{title}</h3>}
 
-      <div class="flipbook" data-flipbook data-num-sheets={numSheets}
-           data-max-turned={maxTurned} data-total-pages={pages.length}>
-        <div class="flipbook__book" style={`aspect-ratio:${spreadAR}`}>
-          <div class="flipbook__endpaper flipbook__endpaper--left" aria-hidden="true" />
-          <div class="flipbook__endpaper flipbook__endpaper--right" aria-hidden="true" />
-
-          {sheets.map((sheet, i) => (
-            <div class="flipbook__sheet" data-sheet={i}>
-              <div class="flipbook__face flipbook__face--front">
-                <Image
-                  src={sheet.front}
-                  alt={`Page ${i * 2 + 1} of ${pages.length}`}
-                  widths={[400, 640, 1024, 1600]}
-                  sizes="(min-width: 48rem) 44vw, 50vw"
-                  loading={i < 2 ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
-                <span class="flipbook__shade" aria-hidden="true" />
-              </div>
-              <div class="flipbook__face flipbook__face--back">
-                {sheet.back ? (
-                  <Image
-                    src={sheet.back}
-                    alt={`Page ${i * 2 + 2} of ${pages.length}`}
-                    widths={[400, 640, 1024, 1600]}
-                    sizes="(min-width: 48rem) 44vw, 50vw"
-                    loading={i < 2 ? 'eager' : 'lazy'}
-                    decoding="async"
-                  />
-                ) : (
-                  <div class="flipbook__blank" />
-                )}
-                <span class="flipbook__shade" aria-hidden="true" />
-              </div>
+      <div class="flipbook" data-flipbook data-num-pages={numPages}>
+        <div class="flipbook__book" style={`aspect-ratio:${pageAR}`}>
+          {pages.map((page, i) => (
+            <div class="flipbook__page" data-page={i}>
+              <Image
+                src={page.src}
+                alt={`Page ${i + 1} of ${numPages}`}
+                widths={[400, 640, 1024, 1600]}
+                sizes="(min-width: 48rem) 88vw, 100vw"
+                loading={i < 2 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+              <span class="flipbook__shade" aria-hidden="true" />
             </div>
           ))}
 
-          <div class="flipbook__spine" aria-hidden="true" />
           <button class="flipbook__zone flipbook__zone--left" data-prev
-                  aria-label="Previous spread" />
+                  aria-label="Previous page" />
           <button class="flipbook__zone flipbook__zone--right" data-next
-                  aria-label="Next spread" />
+                  aria-label="Next page" />
         </div>
 
         <div class="flipbook__controls">
           <button class="flipbook__arrow" type="button" data-prev
-                  aria-label="Previous spread">
+                  aria-label="Previous page">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M15 4l-8 8 8 8" />
             </svg>
           </button>
 
           <div class="flipbook__slider" data-slider role="slider" tabindex="0"
-               aria-label="Spread" aria-valuemin="1"
-               aria-valuemax={totalPositions} aria-valuenow="1">
+               aria-label="Page" aria-valuemin="1"
+               aria-valuemax={numPages} aria-valuenow="1">
             <span class="flipbook__rail" aria-hidden="true" />
             <span class="flipbook__fill" data-fill aria-hidden="true" />
             <span class="flipbook__ticks" aria-hidden="true">
-              {Array.from({ length: totalPositions }, (_, i) => (
+              {Array.from({ length: numPages }, (_, i) => (
                 <span class="flipbook__tick" data-tick data-index={i} />
               ))}
             </span>
@@ -101,7 +67,7 @@ const spreadAR = 2 * pageAR;
           </div>
 
           <button class="flipbook__arrow" type="button" data-next
-                  aria-label="Next spread">
+                  aria-label="Next page">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M9 4l8 8-8 8" />
             </svg>
@@ -109,7 +75,7 @@ const spreadAR = 2 * pageAR;
         </div>
 
         <p class="flipbook__count">
-          <span data-count-label>1</span>&thinsp;/&thinsp;{pages.length}
+          <span data-count-label>1</span>&thinsp;/&thinsp;{numPages}
         </p>
       </div>
     </div>
@@ -138,57 +104,21 @@ const spreadAR = 2 * pageAR;
     overflow: hidden;
   }
 
-  .flipbook__endpaper {
-    position: absolute;
-    top: 0;
-    width: 50%;
-    height: 100%;
-    z-index: 0;
-  }
-  .flipbook__endpaper--left {
-    left: 0;
-    background: linear-gradient(to right, #eae3d4, #efe9db);
-  }
-  .flipbook__endpaper--right {
-    right: 0;
-    background: linear-gradient(to left, #eae3d4, #efe9db);
-  }
-
-  .flipbook__sheet {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 50%;
-    height: 100%;
-    transform-origin: left center;
-    transform-style: preserve-3d;
-    will-change: transform;
-  }
-
-  .flipbook__face--front,
-  .flipbook__face--back {
+  .flipbook__page {
     position: absolute;
     inset: 0;
+    transform-origin: left center;
     backface-visibility: hidden;
     overflow: hidden;
     background: #fff;
-  }
-  .flipbook__face--back {
-    transform: rotateY(180deg);
+    will-change: transform;
   }
 
-  .flipbook__face--front :global(img),
-  .flipbook__face--back :global(img) {
+  .flipbook__page :global(img) {
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
-  }
-
-  .flipbook__blank {
-    width: 100%;
-    height: 100%;
-    background: #fff;
   }
 
   .flipbook__shade {
@@ -196,31 +126,7 @@ const spreadAR = 2 * pageAR;
     inset: 0;
     opacity: 0;
     pointer-events: none;
-  }
-  .flipbook__face--front .flipbook__shade {
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.25), transparent 50%);
-  }
-  .flipbook__face--back .flipbook__shade {
-    background: linear-gradient(to left, rgba(0, 0, 0, 0.25), transparent 50%);
-  }
-
-  .flipbook__spine {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 8px;
-    transform: translateX(-50%);
-    background: linear-gradient(
-      to right,
-      transparent,
-      rgba(0, 0, 0, 0.04) 25%,
-      rgba(0, 0, 0, 0.10) 50%,
-      rgba(0, 0, 0, 0.04) 75%,
-      transparent
-    );
-    z-index: 50;
-    pointer-events: none;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent 50%);
   }
 
   .flipbook__zone {
@@ -238,15 +144,14 @@ const spreadAR = 2 * pageAR;
   .flipbook__zone--right { right: 0; }
   .flipbook__zone[disabled] { cursor: default; }
 
-  .flipbook__sheet.is-flipping-forward {
+  .flipbook__page.is-flipping-forward {
     animation: flip-forward 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
   }
-  .flipbook__sheet.is-flipping-back {
+  .flipbook__page.is-flipping-back {
     animation: flip-back 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
   }
 
-  .flipbook__sheet.is-flipping-forward .flipbook__face--front .flipbook__shade,
-  .flipbook__sheet.is-flipping-back .flipbook__face--back .flipbook__shade {
+  .flipbook__page.is-flipping-forward .flipbook__shade {
     animation: shade-peak 700ms ease forwards;
   }
 
@@ -265,10 +170,9 @@ const spreadAR = 2 * pageAR;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .flipbook__sheet.is-flipping-forward,
-    .flipbook__sheet.is-flipping-back,
-    .flipbook__sheet.is-flipping-forward .flipbook__shade,
-    .flipbook__sheet.is-flipping-back .flipbook__shade {
+    .flipbook__page.is-flipping-forward,
+    .flipbook__page.is-flipping-back,
+    .flipbook__page.is-flipping-forward .flipbook__shade {
       animation-duration: 1ms;
     }
   }
@@ -382,11 +286,9 @@ const spreadAR = 2 * pageAR;
 <script>
   document.addEventListener('astro:page-load', () => {
     document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((book) => {
-      const sheetEls = [...book.querySelectorAll<HTMLElement>('.flipbook__sheet')];
-      const numSheets = Number(book.dataset.numSheets);
-      const maxTurned = Number(book.dataset.maxTurned);
-      const totalPages = Number(book.dataset.totalPages);
-      const totalPos = maxTurned + 1;
+      const pageEls = [...book.querySelectorAll<HTMLElement>('.flipbook__page')];
+      const numPages = Number(book.dataset.numPages);
+      const maxPage = numPages - 1;
 
       const label = book.querySelector<HTMLElement>('[data-count-label]');
       const fill = book.querySelector<HTMLElement>('[data-fill]');
@@ -395,19 +297,19 @@ const spreadAR = 2 * pageAR;
       const prevBtns = [...book.querySelectorAll<HTMLButtonElement>('[data-prev]')];
       const nextBtns = [...book.querySelectorAll<HTMLButtonElement>('[data-next]')];
 
-      let turned = 0;
+      let current = 0;
       let turning: { el: HTMLElement; target: number } | null = null;
 
       const setZ = () => {
-        sheetEls.forEach((el, i) => {
-          el.style.zIndex = String(i < turned ? i + 1 : turned + numSheets - i);
+        pageEls.forEach((el, i) => {
+          el.style.zIndex = i < current ? '0' : String(numPages - i);
         });
       };
 
       const settle = () => {
-        sheetEls.forEach((el, i) => {
-          el.style.transform = i < turned ? 'rotateY(-180deg)' : 'rotateY(0deg)';
-          if (Math.abs(i - turned) <= 1) {
+        pageEls.forEach((el, i) => {
+          el.style.transform = i < current ? 'rotateY(-180deg)' : 'rotateY(0deg)';
+          if (Math.abs(i - current) <= 1) {
             el.querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
               .forEach((img) => { img.loading = 'eager'; });
           }
@@ -416,58 +318,49 @@ const spreadAR = 2 * pageAR;
       };
 
       const paintChrome = (shown: number) => {
-        if (label) {
-          if (shown === 0) {
-            label.textContent = '1';
-          } else {
-            const l = shown * 2;
-            const r = l + 1;
-            label.textContent = r <= totalPages
-              ? `${l} – ${r}` : String(l);
-          }
-        }
-        const pct = totalPos > 1 ? (shown / (totalPos - 1)) * 100 : 0;
+        if (label) label.textContent = String(shown + 1);
+        const pct = maxPage > 0 ? (shown / maxPage) * 100 : 0;
         if (fill) fill.style.width = `${pct}%`;
         if (knob) knob.style.left = `${pct}%`;
         slider?.setAttribute('aria-valuenow', String(shown + 1));
         prevBtns.forEach((b) => { b.disabled = shown === 0; });
-        nextBtns.forEach((b) => { b.disabled = shown >= maxTurned; });
+        nextBtns.forEach((b) => { b.disabled = shown >= maxPage; });
       };
 
       const finishTurn = () => {
         if (!turning) return;
         const { el, target } = turning;
-        turned = target;
+        current = target;
         turning = null;
         settle();
         el.classList.remove('is-flipping-forward', 'is-flipping-back');
-        paintChrome(turned);
+        paintChrome(current);
       };
 
       const flipTo = (target: number, animate: boolean) => {
-        const next = Math.max(0, Math.min(target, maxTurned));
+        const next = Math.max(0, Math.min(target, maxPage));
         finishTurn();
-        if (next === turned) return;
+        if (next === current) return;
 
-        if (!animate || Math.abs(next - turned) !== 1) {
-          turned = next;
+        if (!animate || Math.abs(next - current) !== 1) {
+          current = next;
           settle();
-          paintChrome(turned);
+          paintChrome(current);
           return;
         }
 
-        const forward = next > turned;
-        const idx = forward ? turned : turned - 1;
-        const el = sheetEls[idx];
+        const forward = next > current;
+        const idx = forward ? current : current - 1;
+        const el = pageEls[idx];
 
-        el.style.zIndex = String(2 * numSheets + 1);
+        el.style.zIndex = String(numPages + 1);
         el.style.transform = '';
         el.classList.add(forward ? 'is-flipping-forward' : 'is-flipping-back');
         turning = { el, target: next };
         paintChrome(next);
 
-        if (idx + 1 < numSheets) {
-          sheetEls[idx + 1].querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
+        if (idx + 1 < numPages) {
+          pageEls[idx + 1].querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
             .forEach((img) => { img.loading = 'eager'; });
         }
 
@@ -480,7 +373,7 @@ const spreadAR = 2 * pageAR;
       };
 
       const step = (d: number) => {
-        flipTo((turning ? turning.target : turned) + d, true);
+        flipTo((turning ? turning.target : current) + d, true);
       };
 
       prevBtns.forEach((b) => b.addEventListener('click', () => step(-1)));
@@ -490,14 +383,14 @@ const spreadAR = 2 * pageAR;
         if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
         if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
         if (e.key === 'Home') { e.preventDefault(); flipTo(0, false); }
-        if (e.key === 'End') { e.preventDefault(); flipTo(maxTurned, false); }
+        if (e.key === 'End') { e.preventDefault(); flipTo(maxPage, false); }
       });
 
       if (slider) {
         const posAt = (cx: number) => {
           const r = slider.getBoundingClientRect();
           const t = Math.max(0, Math.min((cx - r.left) / r.width, 1));
-          return Math.round(t * maxTurned);
+          return Math.round(t * maxPage);
         };
         let scrubbing = false;
         slider.addEventListener('pointerdown', (e: PointerEvent) => {
@@ -529,7 +422,7 @@ const spreadAR = 2 * pageAR;
       }, { passive: true });
 
       settle();
-      paintChrome(turned);
+      paintChrome(current);
     });
   });
 </script>
