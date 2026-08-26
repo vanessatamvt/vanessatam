@@ -119,12 +119,22 @@ const pad = (n: number) => String(n).padStart(2, '0');
     color: var(--color-ink);
   }
 
-  /* The margin the sheet sits centred within — the page reads as a page on a
-     surface, not a full-bleed band. */
+  /* The frame IS the sheet. Its ground is the same white the scanned pages
+     are printed on, so the page's own white runs out to the border instead of
+     stopping short against the site's cream — the margin reads as the paper's
+     margin rather than a gap around a pasted-in image. */
   .flipbook__frame {
+    --flipbook-paper: #fff;
     padding: clamp(var(--space-4), 3vw, var(--space-12));
-    background: var(--color-bg);
+    background: var(--flipbook-paper);
     border: 1px solid var(--color-hairline);
+  }
+
+  /* Anything the contain-fit leaves over at the stage edge is paper too, so a
+     page whose proportions differ a hair from the stage can't show a seam. */
+  .flipbook__stage,
+  .flipbook__face {
+    background: var(--flipbook-paper);
   }
 
   /* Perspective is anchored at the spine so a turning sheet recedes the way a
