@@ -195,7 +195,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
     border-radius: 50%;
     background: none;
     cursor: pointer;
-    color: var(--color-ink);
+    color: var(--color-accent);
     transition: color 160ms ease, border-color 160ms ease, opacity 160ms ease;
   }
   .flipbook__arrow svg {
@@ -208,7 +208,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
     stroke-linejoin: round;
   }
   .flipbook__arrow:hover:not([disabled]) {
-    color: var(--color-accent);
+    color: var(--color-accent-hover);
     border-color: var(--color-accent);
   }
   .flipbook__arrow[disabled] {
