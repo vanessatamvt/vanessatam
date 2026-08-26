@@ -1024,22 +1024,16 @@ const videoId = youtubeId(video);
     if (besides.length === 0) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    let lastY = 0;
-    let scrollingDown = true;
-    const trackScroll = () => {
-      scrollingDown = window.scrollY >= lastY;
-      lastY = window.scrollY;
-    };
-    window.addEventListener('scroll', trackScroll, { passive: true });
-    trackScroll();
-
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && scrollingDown) {
+          if (entry.isIntersecting) {
             entry.target.classList.add('is-revealed');
-          } else if (!entry.isIntersecting && scrollingDown) {
-            entry.target.classList.remove('is-revealed');
+          } else {
+            const rootBottom = entry.rootBounds?.bottom ?? window.innerHeight;
+            if (entry.boundingClientRect.top >= rootBottom) {
+              entry.target.classList.remove('is-revealed');
+            }
           }
         }
       },
