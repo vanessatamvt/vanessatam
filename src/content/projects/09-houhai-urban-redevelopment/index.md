@@ -5,7 +5,7 @@ category: professional
 code: "09"
 tag: "China"
 stage: "Invited Competition"
-description: "An underground network knitting new civic life beneath Shenzhen's Luohu and Nanshan districts."
+description: "An underground network knitting new civic life beneath Shenzhen's Nanshan and Houhai districts."
 facts:
   affiliation: "RAD Ltd, Hong Kong"
   client: "China Resources Land, Shenzhen Municipal Government"
