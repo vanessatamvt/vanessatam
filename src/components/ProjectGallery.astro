@@ -16,12 +16,10 @@ const { projects } = Astro.props;
   <div class="project-gallery__rail" data-gallery-rail tabindex="0" aria-label="Project gallery, scroll horizontally">
     {projects.map((project) => <ProjectCard project={project} />)}
   </div>
-  <button class="project-gallery__arrow project-gallery__arrow--left" data-gallery-prev aria-label="Scroll left" disabled>
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4l-8 8 8 8" /></svg>
-  </button>
-  <button class="project-gallery__arrow project-gallery__arrow--right" data-gallery-next aria-label="Scroll right">
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4l8 8-8 8" /></svg>
-  </button>
+  <div class="project-gallery__nav container">
+    <button class="project-gallery__arrow project-gallery__arrow--left" data-gallery-prev aria-label="Scroll left" disabled>&larr;</button>
+    <button class="project-gallery__arrow project-gallery__arrow--right" data-gallery-next aria-label="Scroll right">&rarr;</button>
+  </div>
 </div>
 
 <style>
@@ -66,50 +64,24 @@ const { projects } = Astro.props;
     scroll-snap-type: none;
   }
 
-  .project-gallery {
-    position: relative;
-  }
-
-  .project-gallery__arrow {
+  .project-gallery__nav {
     display: none;
   }
 
   @media (pointer: fine) {
+    .project-gallery__nav {
+      display: flex;
+      justify-content: space-between;
+    }
+
     .project-gallery__arrow {
-      display: grid;
-      place-items: center;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 2.75rem;
-      height: 2.75rem;
-      padding: 0;
-      border: 1px solid var(--color-hairline);
-      border-radius: 50%;
-      background: var(--color-bg, #f6f1e4);
-      color: var(--color-accent);
+      font-size: var(--text-2xl);
+      color: var(--color-ink);
       cursor: pointer;
-      z-index: 10;
-      transition: opacity 200ms ease, border-color 160ms ease, color 160ms ease;
+      transition: color 160ms ease, opacity 200ms ease;
     }
     .project-gallery__arrow:hover:not([disabled]) {
-      color: var(--color-accent-hover, var(--color-accent));
-      border-color: var(--color-accent);
-    }
-    .project-gallery__arrow svg {
-      width: 1.15rem;
-      height: 1.15rem;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .project-gallery__arrow--left {
-      left: calc(var(--container-padding) / 2);
-    }
-    .project-gallery__arrow--right {
-      right: calc(var(--container-padding) / 2);
+      color: var(--color-accent);
     }
     .project-gallery__arrow[disabled] {
       opacity: 0;
