@@ -59,6 +59,12 @@ interface Props {
    *  something like a disclaimer that belongs right under a subheading, not
    *  floating a whole section-padding's distance away from it. */
   note?: string;
+  /** One image and `text` side by side: the image takes a third of the
+   *  content width, the paragraph the remaining two thirds. For an opening
+   *  beat where a locator drawing and the prose that introduces it belong on
+   *  the same line, rather than the paragraph sitting under a full-width
+   *  image. Below 48rem the two stack, image first. */
+  textBeside?: boolean;
 }
 const {
   images = [],
@@ -74,7 +80,11 @@ const {
   autoplay,
   compact = false,
   note,
+  textBeside = false,
 } = Astro.props;
+// The split only makes sense with exactly one image AND a paragraph to sit
+// beside it; anything else falls through to the normal single/row handling.
+const isTextBeside = textBeside && images.length === 1;
 const shouldAutoplay = autoplay ?? videoBanner;
 const sizesFor = (count: number) => `(min-width: 48rem) ${Math.round(100 / count)}vw, 100vw`;
 // A compact single image is styled to occupy one slot of a 2-up row, so it
@@ -211,7 +221,33 @@ const videoId = youtubeId(video);
     }
 
     {
-      images.length === 1 && !compact && !isAnnotated && (
+      isTextBeside && (
+        <div class="project-section__beside">
+          <figure class="project-section__beside-figure">
+            <Image
+              class:list={{ 'js-zoomable': zoom }}
+              src={images[0].src}
+              alt={images[0].caption ?? ''}
+              widths={[400, 800, 1200]}
+              sizes="(min-width: 48rem) 30vw, 100vw"
+              loading="lazy"
+              decoding="async"
+            />
+            {images[0].caption && <figcaption>{images[0].caption}</figcaption>}
+          </figure>
+          <div class="project-section__beside-text">
+            {(text ?? '').split('\n').filter(Boolean).map((line, i) => (
+              <p class="project-section__beside-para" data-first={i === 0 ? '' : undefined}>
+                {line}
+              </p>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    {
+      images.length === 1 && !compact && !isAnnotated && !isTextBeside && (
         <figure class="project-section__figure">
           <Image
             class:list={{ 'js-zoomable': zoom }}
@@ -257,7 +293,7 @@ const videoId = youtubeId(video);
     }
 
     {
-      images.length > 0 && text && (
+      images.length > 0 && text && !isTextBeside && (
         <p
           class:list={[
             'project-section__text',
@@ -535,6 +571,67 @@ const videoId = youtubeId(video);
   }
 
   .project-section__figure figcaption,
+  /* --- Image beside text -------------------------------------------------
+     A third for the drawing, two thirds for the paragraph that introduces it.
+     The image column is fixed by fraction (not by aspect ratio like the 2-up
+     rows), because here the pairing is image-to-prose, not image-to-image —
+     the drawing should hold the same third of the measure whatever its own
+     proportions are. Aligned to the top so the paragraph starts level with
+     the top edge of the drawing. */
+  .project-section__beside {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-8);
+  }
+
+  .project-section__beside-figure {
+    flex: 0 0 calc((100% - var(--space-8)) / 3);
+    margin: 0;
+    min-width: 0;
+  }
+
+  .project-section__beside-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .project-section__beside-figure figcaption {
+    padding-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
+
+  .project-section__beside-text {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+
+  /* Matches the size/colour of `text--small`, the size long explanatory
+     paragraphs use elsewhere on a project page. */
+  .project-section__beside-para {
+    font-size: var(--text-sm);
+    line-height: 1.75;
+    color: var(--color-ink);
+  }
+
+  .project-section__beside-para + .project-section__beside-para {
+    margin-top: 1em;
+  }
+
+  /* Stack on narrow screens — drawing first, then the prose, which is the
+     order they're read in anyway. */
+  @media (max-width: 48rem) {
+    .project-section__beside {
+      display: block;
+    }
+
+    .project-section__beside-figure {
+      width: 60%;
+      margin-bottom: var(--space-6);
+    }
+  }
+
   .project-section__shared-caption {
     padding-top: var(--space-2);
     font-size: var(--text-sm);

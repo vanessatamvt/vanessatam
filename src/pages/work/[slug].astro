@@ -5,6 +5,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionLabel from '../../components/SectionLabel.astro';
 import FactList from '../../components/FactList.astro';
 import RoleHighlight from '../../components/RoleHighlight.astro';
+import PageFlipbook from '../../components/PageFlipbook.astro';
 import ProjectSection from '../../components/ProjectSection.astro';
 import BuildingGallery from '../../components/BuildingGallery.astro';
 
@@ -124,7 +125,10 @@ const heroSizes = heroContain ? `min(100vw, ${pageHeroImage.width}px)` : '100vw'
 
     <div class="project-sections">
       {
-        sections.map((section) => (
+        sections.map((section) =>
+          section.flipbook && section.flipbook.length > 0 ? (
+            <PageFlipbook pages={section.flipbook} title={section.flipbookTitle} />
+          ) : (
           <ProjectSection
             images={section.images}
             sharedCaption={section.sharedCaption}
@@ -133,6 +137,7 @@ const heroSizes = heroContain ? `min(100vw, ${pageHeroImage.width}px)` : '100vw'
             text={section.text}
             grid={section.grid}
             narrow={section.narrow}
+            textBeside={section.textBeside}
             compact={section.compact}
             note={section.note}
             smallText={section.smallText}

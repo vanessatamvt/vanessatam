@@ -1,0 +1,316 @@
+---
+// An issuu-style page-turner for a run of book pages — used where a project
+// carries a whole exported booklet (Un Po' Più di Boschi's studio book and
+// thesis book) and stacking twelve or sixteen full-width scans down the page
+// would bury the rest of the project.
+//
+// Every page is rendered up front and stacked absolutely inside one stage, so
+// turning is instant and never reflows the page; only the top card animates.
+// The stage is a fixed aspect box, and each page is object-fit:contain inside
+// it, so a run of mixed page proportions (a portrait page, a wider render)
+// sits in a stable frame instead of making the layout jump on every turn.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  pages: { src: ImageMetadata }[];
+  title?: string;
+  /** Aspect ratio of the stage, w/h. Defaults to A4 landscape, the shape of
+   *  most of the book. */
+  ratio?: number;
+}
+const { pages, title, ratio } = Astro.props;
+// Fall back to the most common page shape in the run, so the stage fits the
+// majority of pages exactly and only the odd one out is letterboxed.
+const counts = new Map<number, number>();
+for (const p of pages) {
+  const r = Math.round((p.src.width / p.src.height) * 100) / 100;
+  counts.set(r, (counts.get(r) ?? 0) + 1);
+}
+const commonest = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 1.414;
+const stageRatio = ratio ?? commonest;
+---
+
+{
+  pages.length > 0 && (
+    <section class="flipbook-section">
+      <div class="container">
+        {title && <h3 class="flipbook__title">{title}</h3>}
+
+        <div class="flipbook" data-flipbook data-count={pages.length}>
+          <div class="flipbook__stage" style={`aspect-ratio:${stageRatio}`}>
+            {pages.map((p, i) => (
+              <div class="flipbook__page" data-page={i} data-state={i === 0 ? 'current' : 'after'}>
+                <Image
+                  src={p.src}
+                  alt={`${title ?? 'Page'} ${i + 1} of ${pages.length}`}
+                  widths={[640, 1024, 1600, 2400]}
+                  sizes="(min-width: 48rem) 92vw, 100vw"
+                  loading={i < 2 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              </div>
+            ))}
+
+            <button class="flipbook__edge flipbook__edge--prev" data-prev aria-label="Previous page">
+              <span aria-hidden="true">&#8249;</span>
+            </button>
+            <button class="flipbook__edge flipbook__edge--next" data-next aria-label="Next page">
+              <span aria-hidden="true">&#8250;</span>
+            </button>
+          </div>
+
+          <div class="flipbook__bar">
+            <button class="flipbook__btn" data-prev aria-label="Previous page">Prev</button>
+            <p class="flipbook__count" data-count-label aria-live="polite">
+              1 / {pages.length}
+            </p>
+            <button class="flipbook__btn" data-next aria-label="Next page">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .flipbook-section {
+    padding-block: var(--space-8);
+  }
+
+  .flipbook__title {
+    margin-bottom: var(--space-4);
+    font-family: var(--font-heading);
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  /* The stage is the book. Perspective lives here so the turning leaf reads as
+     a physical page rotating away from the reader rather than a flat wipe. */
+  .flipbook__stage {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: var(--color-bg);
+    border: 1px solid var(--color-hairline);
+    perspective: 2000px;
+  }
+
+  .flipbook__page {
+    position: absolute;
+    inset: 0;
+    transform-origin: left center;
+    backface-visibility: hidden;
+    /* Pages later in the book sit behind the current one; the turning page is
+       lifted above everything by its own state below. */
+    transition:
+      transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 620ms ease;
+  }
+
+  .flipbook__page :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* Unturned pages wait flat underneath. */
+  .flipbook__page[data-state='after'] {
+    transform: rotateY(0deg);
+    opacity: 0;
+    z-index: 1;
+  }
+
+  .flipbook__page[data-state='current'] {
+    transform: rotateY(0deg);
+    opacity: 1;
+    z-index: 2;
+  }
+
+  /* Turned pages swing off to the left, the way a read page lies over the
+     spine. Kept at z-index 3 so the leaf passes ABOVE the page it reveals. */
+  .flipbook__page[data-state='before'] {
+    transform: rotateY(-165deg);
+    opacity: 0;
+    z-index: 3;
+  }
+
+  /* Big invisible click targets over the left and right thirds of the book —
+     the way you'd turn a page by tapping its edge. The chevrons only surface
+     on hover so they never sit on top of a drawing while reading. */
+  .flipbook__edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 22%;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--color-ink);
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+
+  .flipbook__edge--prev {
+    left: 0;
+    justify-content: flex-start;
+  }
+
+  .flipbook__edge--next {
+    right: 0;
+    justify-content: flex-end;
+  }
+
+  .flipbook__edge span {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    margin-inline: 0.6rem;
+    border-radius: 50%;
+    background: var(--color-bg);
+    border: 1px solid var(--color-hairline);
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+
+  .flipbook__stage:hover .flipbook__edge,
+  .flipbook__edge:focus-visible {
+    opacity: 1;
+  }
+
+  .flipbook__edge[disabled] {
+    cursor: default;
+    opacity: 0 !important;
+  }
+
+  .flipbook__bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    padding-top: var(--space-3);
+  }
+
+  .flipbook__btn {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-family: var(--font-mono, var(--font-body));
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .flipbook__btn:hover:not([disabled]) {
+    color: var(--color-ink);
+  }
+
+  .flipbook__btn[disabled] {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .flipbook__count {
+    font-family: var(--font-mono, var(--font-body));
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    min-width: 5ch;
+    text-align: center;
+  }
+
+  /* A page turn is decorative; readers who've asked for less motion still get
+     the page change, just without the swing. */
+  @media (prefers-reduced-motion: reduce) {
+    .flipbook__page {
+      transition: opacity 160ms ease;
+    }
+
+    .flipbook__page[data-state='before'] {
+      transform: rotateY(0deg);
+    }
+  }
+</style>
+
+<script>
+  // One controller per flipbook on the page, so a project can carry several
+  // (Boschi has two: the studio book and the thesis book) without them
+  // sharing state.
+  document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((book) => {
+    const pages = [...book.querySelectorAll<HTMLElement>('.flipbook__page')];
+    const label = book.querySelector<HTMLElement>('[data-count-label]');
+    const prevs = [...book.querySelectorAll<HTMLButtonElement>('[data-prev]')];
+    const nexts = [...book.querySelectorAll<HTMLButtonElement>('[data-next]')];
+    if (!pages.length) return;
+
+    let index = 0;
+
+    const render = () => {
+      pages.forEach((page, i) => {
+        page.dataset.state = i < index ? 'before' : i === index ? 'current' : 'after';
+        // Pull the neighbours in ahead of the turn so the next page is
+        // already decoded when it's revealed.
+        if (Math.abs(i - index) <= 1) {
+          const img = page.querySelector('img');
+          if (img?.loading === 'lazy') img.loading = 'eager';
+        }
+      });
+      if (label) label.textContent = `${index + 1} / ${pages.length}`;
+      prevs.forEach((b) => (b.disabled = index === 0));
+      nexts.forEach((b) => (b.disabled = index === pages.length - 1));
+    };
+
+    const go = (delta: number) => {
+      const next = Math.min(Math.max(index + delta, 0), pages.length - 1);
+      if (next === index) return;
+      index = next;
+      render();
+    };
+
+    prevs.forEach((b) => b.addEventListener('click', () => go(-1)));
+    nexts.forEach((b) => b.addEventListener('click', () => go(1)));
+
+    // Arrow keys drive whichever book the reader is actually looking at.
+    book.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        go(-1);
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        go(1);
+      }
+    });
+
+    // Horizontal swipe on touch, ignoring vertical scrolling.
+    let startX = 0;
+    let startY = 0;
+    book.addEventListener(
+      'touchstart',
+      (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      },
+      { passive: true },
+    );
+    book.addEventListener(
+      'touchend',
+      (e) => {
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
+      },
+      { passive: true },
+    );
+
+    render();
+  });
+</script>

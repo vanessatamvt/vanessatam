@@ -198,6 +198,23 @@ const projects = defineCollection({
             // item in a "2 per row" sequence like Site Reviews) matches the
             // height of the 2-up rows above it rather than reading much taller.
             compact: z.boolean().optional(),
+            // A run of book pages presented as an issuu-style page-turner
+            // instead of a stack of full-width scans — for a project that
+            // carries a whole exported booklet. `flipbookTitle` labels it.
+            // Rendered by <PageFlipbook />; a section with `flipbook` set
+            // ignores `images`.
+            flipbook: z
+              .array(z.object({ src: image() }))
+              .default([]),
+            flipbookTitle: z.string().optional(),
+            // One image and `text` side by side: the image takes a third of
+            // the content width and the paragraph the other two thirds —
+            // for an opening beat where a locator drawing and the prose
+            // introducing it belong on the same line. Needs exactly one
+            // image plus `text`; otherwise it's ignored and the section
+            // falls back to the normal image-over-paragraph layout. Stacks
+            // (image first) below 48rem.
+            textBeside: z.boolean().optional(),
             // A short line rendered tightly beneath `text` (not the usual
             // section-to-section gap) at a smaller size than a photo caption —
             // e.g. a disclaimer directly under a "Site Reviews" subheading.
