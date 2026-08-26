@@ -85,14 +85,9 @@ const ratio = (c: (typeof chapters)[number]) =>
         </ul>
       </div>
 
-      <button class="carousel__arrow carousel__arrow--prev" data-carousel-prev aria-label="Previous chapter">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4 7 12l8 8" /></svg>
-      </button>
-      <button class="carousel__arrow carousel__arrow--next" data-carousel-next aria-label="Next chapter">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 4 8 8-8 8" /></svg>
-      </button>
-
-      <ol class="carousel__dots" data-carousel-dots>
+      <nav class="carousel__nav">
+        <button class="carousel__text-arrow" data-carousel-prev aria-label="Previous chapter" disabled>&larr;</button>
+        <ol class="carousel__dots" data-carousel-dots>
         {
           chapters.map((chapter, i) => (
             <li>
@@ -101,6 +96,8 @@ const ratio = (c: (typeof chapters)[number]) =>
           ))
         }
       </ol>
+        <button class="carousel__text-arrow" data-carousel-next aria-label="Next chapter">&rarr;</button>
+      </nav>
     </section>
   </article>
 </BaseLayout>
@@ -773,55 +770,34 @@ const ratio = (c: (typeof chapters)[number]) =>
   }
 
   /* --- Controls -------------------------------------------------------- */
-  .carousel__arrow {
-    position: absolute;
-    top: calc(var(--space-12) + var(--card-h) / 2);
-    transform: translateY(-50%);
-    display: grid;
-    place-items: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    background: rgba(242, 237, 225, 0.1);
-    color: var(--color-ink);
-    transition:
-      background var(--duration-fast) var(--ease-standard),
-      opacity var(--duration-fast) var(--ease-standard);
+  .carousel__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    padding: var(--space-12) var(--container-padding) 0;
   }
 
-  .carousel__arrow:hover {
-    background: rgba(242, 237, 225, 0.22);
+  .carousel__text-arrow {
+    font-size: var(--text-2xl);
+    color: var(--color-accent);
+    cursor: pointer;
+    transition: color 160ms ease, opacity 200ms ease;
   }
-
-  .carousel__arrow:disabled {
-    opacity: 0.25;
-    cursor: default;
+  .carousel__text-arrow:hover:not([disabled]) {
+    color: var(--color-accent-hover);
   }
-
-  .carousel__arrow svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .carousel__arrow--prev {
-    left: var(--container-padding);
-  }
-
-  .carousel__arrow--next {
-    right: var(--container-padding);
+  .carousel__text-arrow[disabled] {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .carousel__dots {
     display: flex;
-    justify-content: center;
+    align-items: center;
     gap: var(--space-2);
-    padding: var(--space-12) 0 0;
     margin: 0;
+    padding: 0;
     list-style: none;
   }
 
@@ -849,7 +825,7 @@ const ratio = (c: (typeof chapters)[number]) =>
 
     /* No room to sit an arrow beside the cards on a phone — swipe is the
        control there, and the dots still show where you are. */
-    .carousel__arrow {
+    .carousel__text-arrow {
       display: none;
     }
   }
