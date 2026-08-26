@@ -107,7 +107,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
   .flipbook__page {
     position: absolute;
     inset: 0;
-    transform-origin: left center;
+    transform-origin: center center;
     backface-visibility: hidden;
     overflow: hidden;
     background: #fff;
@@ -126,7 +126,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
     inset: 0;
     opacity: 0;
     pointer-events: none;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.2), transparent 50%);
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.15), transparent 60%);
   }
 
   .flipbook__zone {
