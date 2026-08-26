@@ -10,7 +10,7 @@ const phone = '+1 (604) 362-3678';
       <a href={`mailto:${email}`} class="site-footer__link">{email}</a>
       <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} class="site-footer__link">{phone}</a>
     </div>
-    <p class="site-footer__tagline">Architecture | Photography</p>
+    <p class="site-footer__tagline"><a href="/" class="site-footer__tagline-link">Architecture</a> | <a href="/photo-journal" class="site-footer__tagline-link">Photography</a></p>
   </div>
 </footer>
 
@@ -50,5 +50,14 @@ const phone = '+1 (604) 362-3678';
     font-size: var(--text-xs);
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+
+  .site-footer__tagline-link {
+    color: var(--color-muted);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .site-footer__tagline-link:hover {
+    color: var(--color-accent);
   }
 </style>
