@@ -214,8 +214,8 @@ const extras: { years: string; text: string; note?: string; href?: string }[] = 
           <h1 class="about-top__name">Vanessa Tam</h1>
           <p class="about-top__credential">Architect — ARB, UK</p>
           <div class="about-top__contact">
-            <a href={`mailto:${email}`}>{email}</a>
-            <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} class="about-top__phone">{phone}</a>
+            <button type="button" class="about-top__copy-email" data-copy-email={email}>{email}</button>
+            <span>{phone}</span>
             <span>{location}</span>
             <a href={pdfHref} class="about-top__download" download>
               Download PDF <span aria-hidden="true">&darr;</span>
@@ -452,11 +452,18 @@ const extras: { years: string; text: string; note?: string; href?: string }[] = 
     color: var(--color-accent);
   }
 
-  /* Every glyph in a monospace face carries the same advance width, so the two
-     spaces bracketing the area code read as wide gaps. Negative word-spacing
-     tightens exactly those two spaces and nothing else — the hyphen isn't one. */
-  .about-top__phone {
-    word-spacing: -0.28em;
+  .about-top__copy-email {
+    display: inline;
+    font: inherit;
+    color: var(--color-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .about-top__copy-email:hover {
+    color: var(--color-accent);
   }
 
   .about-top__download {
@@ -918,7 +925,23 @@ const extras: { years: string; text: string; note?: string; href?: string }[] = 
     }
   }
 
-  document.addEventListener('astro:page-load', bindEvolution);
+  function bindCopyEmail() {
+    const btn = document.querySelector<HTMLButtonElement>('[data-copy-email]');
+    if (!btn) return;
+    const email = btn.dataset.copyEmail!;
+    const original = btn.textContent!;
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(email).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      });
+    });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    bindEvolution();
+    bindCopyEmail();
+  });
 </script>
 
 
