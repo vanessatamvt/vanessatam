@@ -22,11 +22,10 @@ const phone = '+1 (604) 362-3678';
         <div class="contact-hero__copy">
           <h1 class="contact-hero__title">Get in Touch</h1>
           <p class="contact-hero__desc">
-            Email, call, or complete the form to discuss a project or collaboration.
+            Or just reach out to <a href={`mailto:${email}`} class="contact-hero__email">{email}</a>.
           </p>
           <div class="contact-hero__details">
-            <a href={`mailto:${email}`} class="contact-hero__detail">{email}</a>
-            <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} class="contact-hero__detail">{phone}</a>
+            <span class="contact-hero__detail">{phone}</span>
           </div>
         </div>
       </div>
@@ -108,14 +107,20 @@ const phone = '+1 (604) 362-3678';
     margin-top: var(--space-8);
   }
 
-  .contact-hero__detail {
-    font-size: var(--text-lg);
+  .contact-hero__email {
     color: var(--color-ink);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
     transition: color var(--duration-fast) var(--ease-standard);
   }
 
-  .contact-hero__detail:hover {
+  .contact-hero__email:hover {
     color: var(--color-accent);
+  }
+
+  .contact-hero__detail {
+    font-size: var(--text-lg);
+    color: var(--color-ink);
   }
 
   .contact-form-section {
@@ -236,36 +241,43 @@ const phone = '+1 (604) 362-3678';
     if (!form) return;
 
     const status = document.querySelector<HTMLElement>('[data-form-status]');
-    const recipient = 'vanessatamvt@gmail.com';
+    const submitBtn = form.querySelector<HTMLButtonElement>('.contact-form__submit');
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const data = new FormData(form);
-      const firstName = data.get('firstName') || '';
-      const lastName = data.get('lastName') || '';
-      const email = data.get('email') || '';
-      const phone = data.get('phone') || '';
-      const message = data.get('message') || '';
-
-      const subject = encodeURIComponent(
-        `Portfolio inquiry from ${firstName} ${lastName}`.trim(),
-      );
-      const body = encodeURIComponent(
-        [
-          `From: ${firstName} ${lastName}`.trim(),
-          email ? `Email: ${email}` : '',
-          phone ? `Phone: ${phone}` : '',
-          '',
-          message,
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      );
-
-      window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
-
+      if (submitBtn) submitBtn.disabled = true;
       if (status) {
-        status.textContent = 'Opening your email client…';
+        status.textContent = 'Sending…';
+        status.style.color = '';
+      }
+
+      const data = new FormData(form);
+      data.set('_subject', 'Enquiries about Your Portfolio');
+      data.set('_captcha', 'false');
+      data.set('_template', 'table');
+
+      try {
+        const res = await fetch('https://formsubmit.co/ajax/vanessatamvt@gmail.com', {
+          method: 'POST',
+          body: data,
+        });
+
+        if (res.ok) {
+          if (status) {
+            status.textContent = 'Message sent — thank you!';
+            status.style.color = 'var(--color-accent)';
+          }
+          form.reset();
+        } else {
+          throw new Error('Send failed');
+        }
+      } catch {
+        if (status) {
+          status.textContent = 'Something went wrong. Please email directly instead.';
+          status.style.color = 'var(--color-accent)';
+        }
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   });

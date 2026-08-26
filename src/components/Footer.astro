@@ -8,7 +8,7 @@ const phone = '+1 (604) 362-3678';
   <div class="container site-footer__inner">
     <div class="site-footer__row">
       <a href={`mailto:${email}`} class="site-footer__link">{email}</a>
-      <a href={`tel:${phone.replace(/[^0-9+]/g, '')}`} class="site-footer__link">{phone}</a>
+      <span class="site-footer__link">{phone}</span>
     </div>
     <p class="site-footer__tagline"><a href="/" class="site-footer__tagline-link">Architecture</a> | <a href="/photo-journal" class="site-footer__tagline-link">Photography</a></p>
   </div>
