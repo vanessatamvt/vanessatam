@@ -21,7 +21,7 @@ const email = 'vanessatamvt@gmail.com';
         <div class="contact-hero__copy">
           <h1 class="contact-hero__title">Get in Touch</h1>
           <p class="contact-hero__desc">
-            Or just reach out to <a href={`mailto:${email}`} class="contact-hero__email">{email}</a>.
+            Or just reach out to <button type="button" class="contact-hero__email" data-copy-email={email}>{email}</button>.
           </p>
         </div>
       </div>
@@ -97,9 +97,12 @@ const email = 'vanessatamvt@gmail.com';
   }
 
   .contact-hero__email {
+    display: inline;
+    font: inherit;
     color: var(--color-ink);
     text-decoration: underline;
     text-underline-offset: 0.15em;
+    cursor: pointer;
     transition: color var(--duration-fast) var(--ease-standard);
   }
 
@@ -227,6 +230,18 @@ const email = 'vanessatamvt@gmail.com';
 
 <script>
   document.addEventListener('astro:page-load', () => {
+    const copyBtn = document.querySelector<HTMLButtonElement>('[data-copy-email]');
+    if (copyBtn) {
+      const email = copyBtn.dataset.copyEmail!;
+      const original = copyBtn.textContent!;
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(email).then(() => {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => { copyBtn.textContent = original; }, 1500);
+        });
+      });
+    }
+
     const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
     if (!form) return;
 
