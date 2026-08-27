@@ -43,8 +43,8 @@ sections:
       - src: ./page-54.jpg
       - src: ./page-55.jpg
       - src: ./page-56.jpg
-      - src: ./page-57.jpg
       - src: ./page-58.jpg
+      - src: ./page-57.jpg
       - src: ./page-59.jpg
       - src: ./page-60.jpg
       - src: ./page-61.jpg

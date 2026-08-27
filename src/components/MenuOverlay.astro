@@ -1,9 +1,4 @@
 ---
-// Full-screen nav overlay, toggled by the "Menu" button in Header.
-// About / Work / Photo-Journal / Contact. "Work" IS the home page — the project
-// gallery is the site's landing content, so a separate "Home" entry pointing at
-// the same place was redundant. About leads the menu but is NOT the landing
-// page: visitors still arrive on the gallery at "/".
 const email = 'vanessatamvt@gmail.com';
 ---
 
@@ -37,8 +32,6 @@ const email = 'vanessatamvt@gmail.com';
   </nav>
 
   <div class="container menu-overlay__bottom">
-    <!-- Name is intentionally not repeated here — Header already shows it
-         on every page, this overlay just sits on top of it. -->
     <p class="menu-overlay__tagline">Architecture | Photography</p>
   </div>
 </div>
@@ -93,10 +86,6 @@ const email = 'vanessatamvt@gmail.com';
     opacity: 0.6;
   }
 
-  /* One arrow style everywhere — the thin diagonal "&nearr;" glyph — rotated
-     to point in each item's direction, so all four match exactly. The glyph
-     points north-east (up-right) at rest; clockwise rotation aims it:
-     +45° → east, +90° → south-east, +135° → south. */
   .menu-overlay__arrow {
     display: inline-block;
   }
@@ -148,13 +137,56 @@ const email = 'vanessatamvt@gmail.com';
 
     openBtn.addEventListener('click', open);
     closeBtn.addEventListener('click', close);
-    overlay.querySelectorAll('a').forEach((link) => link.addEventListener('click', close));
+
+    overlay.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        const linkPath = new URL(link.href, location.origin).pathname;
+        if (linkPath === location.pathname) {
+          close();
+        } else {
+          sessionStorage.setItem('menuNav', '1');
+        }
+      });
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') close();
     });
+
+    if (sessionStorage.getItem('menuNav')) {
+      sessionStorage.removeItem('menuNav');
+      const main = document.querySelector('main');
+      if (main) {
+        requestAnimationFrame(() => {
+          main.style.transition = 'transform var(--duration-slow) var(--ease-standard)';
+          main.style.transform = 'translateY(0)';
+          overlay.classList.remove('is-open');
+          overlay.setAttribute('aria-hidden', 'true');
+
+          main.addEventListener('transitionend', () => {
+            main.style.transition = '';
+            main.style.transform = '';
+            document.body.style.overflow = '';
+          }, { once: true });
+        });
+      }
+    }
   }
 
-  // astro:page-load fires on first load AND after every client-side
-  // navigation via <ClientRouter />, so listeners keep working across pages.
+  document.addEventListener('astro:after-swap', () => {
+    if (sessionStorage.getItem('menuNav')) {
+      const overlay = document.getElementById('menu-overlay');
+      const main = document.querySelector('main');
+      if (overlay) {
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+      if (main) {
+        main.style.transform = 'translateY(100vh)';
+      }
+      document.body.style.overflow = 'hidden';
+    }
+  });
+
   document.addEventListener('astro:page-load', bindMenu);
 </script>
