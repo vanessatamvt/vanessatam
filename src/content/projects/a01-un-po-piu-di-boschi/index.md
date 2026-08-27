@@ -5,7 +5,7 @@ category: academic
 code: "01"
 tag: "Italy"
 stage: "Master's Thesis"
-description: ""
+description: "A Little More Forestation — A design on woods in the context of the Po Basin"
 facts:
   affiliation: "Politecnico di Milano"
   projectType: "Master's Thesis"
@@ -30,25 +30,5 @@ sections:
     leadText: true
     text: "After centuries of agricultural and industrial expansion in the Po Valley, we investigate the history, culture, and existing conditions of the Basin, and in turn, present a collection of nature-based solutions in varying scales to establish ecological connections and transition towards sustainable and resilient land use."
 
-  # The whole booklet as one page-turner.
-  - flipbook:
-      - src: ./cover-49.jpg
-      - src: ./page-03.jpg
-      - src: ./page-04.jpg
-      - src: ./page-05.jpg
-      - src: ./page-50.jpg
-      - src: ./page-51.jpg
-      - src: ./page-52.jpg
-      - src: ./page-53.jpg
-      - src: ./page-54.jpg
-      - src: ./page-55.jpg
-      - src: ./page-56.jpg
-      - src: ./page-58.jpg
-      - src: ./page-57.jpg
-      - src: ./page-59.jpg
-      - src: ./page-60.jpg
-      - src: ./page-61.jpg
-      - src: ./page-62.jpg
-      - src: ./page-63.jpg
-      - src: ./page-64.jpg
+  - pdf: /boschi-thesis.pdf
 ---

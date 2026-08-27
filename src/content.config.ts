@@ -207,6 +207,7 @@ const projects = defineCollection({
               .array(z.object({ src: image() }))
               .default([]),
             flipbookTitle: z.string().optional(),
+            pdf: z.string().optional(),
             // One image and `text` side by side: the image takes a third of
             // the content width and the paragraph the other two thirds —
             // for an opening beat where a locator drawing and the prose
