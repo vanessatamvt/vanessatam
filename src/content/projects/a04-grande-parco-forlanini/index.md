@@ -13,6 +13,7 @@ facts:
   fullRead: "https://www.behance.net/gallery/148939937/Grande-Parco-Forlanini-2019"
 imageCredit: "Project was completed with Leo Galliot and Rui Jiang under the supervision of Profs. Grazia Concilio, Gianni Dapri, Patrizia Scrugli, and Ilaria Tosoni."
 heroImage: ./hero.jpg
+cardPosition: "60% center"
 heroCaption: "Multi-Art in Nature — the disused gasometer reborn as a viewing platform above the park's flower fields, framed by street art, kites, and balloons"
 sections:
   # Framing — the concept, mirroring the Behance introduction
