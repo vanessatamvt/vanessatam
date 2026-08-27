@@ -13,68 +13,53 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
 ---
 
 {pages.length > 0 && (
-  <section class="flipbook-section">
+  <section class="slider-section">
     <div class="container">
-      {title && <h3 class="flipbook__title">{title}</h3>}
+      {title && <h3 class="slider__title">{title}</h3>}
 
-      <div class="flipbook" data-flipbook data-num-pages={numPages}>
-        <div class="flipbook__book" style={`aspect-ratio:${pageAR}`}>
+      <div class="slider" data-slider-book data-num-pages={numPages}>
+        <div class="slider__stage" style={`aspect-ratio:${pageAR}`}>
           {pages.map((page, i) => (
-            <div class="flipbook__page" data-page={i}>
-              <div class="flipbook__half flipbook__half--left">
-                <Image
-                  src={page.src}
-                  alt={`Page ${i + 1} of ${numPages}`}
-                  widths={[400, 640, 1024, 1600]}
-                  sizes="(min-width: 48rem) 88vw, 100vw"
-                  loading={i < 2 ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
-              </div>
-              <div class="flipbook__half flipbook__half--right">
-                <Image
-                  src={page.src}
-                  alt=""
-                  aria-hidden="true"
-                  widths={[400, 640, 1024, 1600]}
-                  sizes="(min-width: 48rem) 88vw, 100vw"
-                  loading={i < 2 ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
-                <span class="flipbook__fold-shadow" aria-hidden="true" />
-              </div>
-              <span class="flipbook__crease" aria-hidden="true" />
+            <div class="slider__page" data-page={i}>
+              <Image
+                src={page.src}
+                alt={`Page ${i + 1} of ${numPages}`}
+                widths={[400, 640, 1024, 1600]}
+                sizes="(min-width: 48rem) 88vw, 100vw"
+                loading={i < 2 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
             </div>
           ))}
 
-          <button class="flipbook__zone flipbook__zone--left" data-prev
+          <button class="slider__zone slider__zone--left" data-prev
                   aria-label="Previous page" />
-          <button class="flipbook__zone flipbook__zone--right" data-next
+          <button class="slider__zone slider__zone--right" data-next
                   aria-label="Next page" />
         </div>
 
-        <div class="flipbook__controls">
-          <button class="flipbook__arrow" type="button" data-prev
+        <div class="slider__controls">
+          <button class="slider__arrow" type="button" data-prev
                   aria-label="Previous page">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M15 4l-8 8 8 8" />
             </svg>
           </button>
 
-          <div class="flipbook__slider" data-slider role="slider" tabindex="0"
+          <div class="slider__track" data-track role="slider" tabindex="0"
                aria-label="Page" aria-valuemin="1"
                aria-valuemax={numPages} aria-valuenow="1">
-            <span class="flipbook__rail" aria-hidden="true" />
-            <span class="flipbook__fill" data-fill aria-hidden="true" />
-            <span class="flipbook__ticks" aria-hidden="true">
+            <span class="slider__rail" aria-hidden="true" />
+            <span class="slider__fill" data-fill aria-hidden="true" />
+            <span class="slider__ticks" aria-hidden="true">
               {Array.from({ length: numPages }, (_, i) => (
-                <span class="flipbook__tick" data-tick data-index={i} />
+                <span class="slider__tick" data-tick data-index={i} />
               ))}
             </span>
-            <span class="flipbook__knob" data-knob aria-hidden="true" />
+            <span class="slider__knob" data-knob aria-hidden="true" />
           </div>
 
-          <button class="flipbook__arrow" type="button" data-next
+          <button class="slider__arrow" type="button" data-next
                   aria-label="Next page">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M9 4l8 8-8 8" />
@@ -82,7 +67,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
           </button>
         </div>
 
-        <p class="flipbook__count">
+        <p class="slider__count">
           <span data-count-label>1</span>&thinsp;/&thinsp;{numPages}
         </p>
       </div>
@@ -91,9 +76,9 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
 )}
 
 <style>
-  .flipbook-section { padding-block: var(--space-8); }
+  .slider-section { padding-block: var(--space-8); }
 
-  .flipbook__title {
+  .slider__title {
     margin-bottom: var(--space-4);
     font-family: var(--font-heading);
     font-size: var(--text-md);
@@ -101,159 +86,60 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
     color: var(--color-ink);
   }
 
-  .flipbook__book {
+  .slider__stage {
     position: relative;
     width: 100%;
-    perspective: 1800px;
-    perspective-origin: 50% 50%;
-    background: #fff;
-    border: 1px solid var(--color-hairline);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
   }
 
-  .flipbook__page {
+  .slider__page {
     position: absolute;
     inset: 0;
-    background: #fff;
+    opacity: 0;
+    transition: opacity 600ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .flipbook__half {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    width: 50%;
-    overflow: hidden;
+  .slider__page.is-active {
+    opacity: 1;
+    z-index: 1;
   }
 
-  .flipbook__half--left {
-    left: 0;
-  }
-
-  .flipbook__half--right {
-    left: 50%;
-    transform-origin: left center;
-    backface-visibility: hidden;
-    will-change: transform;
-  }
-
-  .flipbook__half :global(img) {
+  .slider__page :global(img) {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
   }
 
-  .flipbook__half--left :global(img) {
-    object-position: left center;
-  }
-
-  .flipbook__half--right :global(img) {
-    object-position: right center;
-  }
-
-  .flipbook__fold-shadow {
-    position: absolute;
-    left: -12px;
-    top: 0;
-    width: 40px;
-    height: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.25), transparent 70%);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .flipbook__crease {
-    position: absolute;
-    top: 0;
-    left: calc(50% - 20px);
-    width: 40px;
-    height: 100%;
-    background: linear-gradient(
-      to right,
-      transparent,
-      rgba(0, 0, 0, 0.04) 35%,
-      rgba(0, 0, 0, 0.1) 50%,
-      rgba(0, 0, 0, 0.04) 65%,
-      transparent
-    );
-    opacity: 0;
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .flipbook__zone {
+  .slider__zone {
     position: absolute;
     top: 0;
     width: 50%;
     height: 100%;
-    z-index: 60;
+    z-index: 10;
     padding: 0;
     border: 0;
     background: none;
     cursor: pointer;
   }
-  .flipbook__zone--left { left: 0; }
-  .flipbook__zone--right { right: 0; }
-  .flipbook__zone[disabled] { cursor: default; }
-
-  .flipbook__page.is-folding-forward .flipbook__half--right {
-    animation: fold-forward 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
-  }
-  .flipbook__page.is-folding-back .flipbook__half--right {
-    animation: fold-back 700ms cubic-bezier(0.38, 0.01, 0.24, 1) forwards;
-  }
-
-  .flipbook__page.is-folding-forward .flipbook__fold-shadow,
-  .flipbook__page.is-folding-back .flipbook__fold-shadow {
-    animation: shadow-peak 700ms ease forwards;
-  }
-
-  .flipbook__page.is-folding-forward .flipbook__crease,
-  .flipbook__page.is-folding-back .flipbook__crease {
-    animation: crease-peak 700ms ease forwards;
-  }
-
-  @keyframes fold-forward {
-    from { transform: rotateY(0deg); }
-    to   { transform: rotateY(-180deg); }
-  }
-  @keyframes fold-back {
-    from { transform: rotateY(-180deg); }
-    to   { transform: rotateY(0deg); }
-  }
-  @keyframes shadow-peak {
-    0%   { opacity: 0; }
-    35%  { opacity: 1; }
-    65%  { opacity: 1; }
-    100% { opacity: 0; }
-  }
-  @keyframes crease-peak {
-    0%   { opacity: 0; }
-    25%  { opacity: 1; }
-    75%  { opacity: 1; }
-    100% { opacity: 0; }
-  }
+  .slider__zone--left { left: 0; }
+  .slider__zone--right { right: 0; }
+  .slider__zone[disabled] { cursor: default; }
 
   @media (prefers-reduced-motion: reduce) {
-    .flipbook__page.is-folding-forward .flipbook__half--right,
-    .flipbook__page.is-folding-back .flipbook__half--right,
-    .flipbook__page.is-folding-forward .flipbook__fold-shadow,
-    .flipbook__page.is-folding-back .flipbook__fold-shadow,
-    .flipbook__page.is-folding-forward .flipbook__crease,
-    .flipbook__page.is-folding-back .flipbook__crease {
-      animation-duration: 1ms;
+    .slider__page {
+      transition-duration: 1ms;
     }
   }
 
-  .flipbook__controls {
+  .slider__controls {
     display: flex;
     align-items: center;
     gap: var(--space-6);
     padding-top: var(--space-6);
   }
 
-  .flipbook__arrow {
+  .slider__arrow {
     flex: 0 0 auto;
     display: grid;
     place-items: center;
@@ -267,7 +153,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
     color: var(--color-accent);
     transition: color 160ms ease, border-color 160ms ease, opacity 160ms ease;
   }
-  .flipbook__arrow svg {
+  .slider__arrow svg {
     width: 1.15rem;
     height: 1.15rem;
     fill: none;
@@ -276,52 +162,52 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .flipbook__arrow:hover:not([disabled]) {
+  .slider__arrow:hover:not([disabled]) {
     color: var(--color-accent-hover);
     border-color: var(--color-accent);
   }
-  .flipbook__arrow[disabled] {
+  .slider__arrow[disabled] {
     opacity: 0.3;
     cursor: default;
   }
 
-  .flipbook__slider {
+  .slider__track {
     position: relative;
     flex: 1 1 auto;
     height: 2.75rem;
     cursor: pointer;
     touch-action: none;
   }
-  .flipbook__rail,
-  .flipbook__fill {
+  .slider__rail,
+  .slider__fill {
     position: absolute;
     top: 50%;
     left: 0;
     height: 2px;
     transform: translateY(-50%);
   }
-  .flipbook__rail {
+  .slider__rail {
     width: 100%;
     background: var(--color-hairline);
   }
-  .flipbook__fill {
+  .slider__fill {
     width: 0;
     background: var(--color-accent);
     transition: width 200ms ease;
   }
-  .flipbook__ticks {
+  .slider__ticks {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .flipbook__tick {
+  .slider__tick {
     width: 1px;
     height: 7px;
     background: var(--color-hairline);
   }
-  .flipbook__knob {
+  .slider__knob {
     position: absolute;
     top: 50%;
     left: 0;
@@ -333,16 +219,16 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
     transform: translateY(-50%);
     transition: left 200ms ease;
   }
-  .flipbook__slider:focus-visible {
+  .slider__track:focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 4px;
   }
-  .flipbook.is-scrubbing .flipbook__fill,
-  .flipbook.is-scrubbing .flipbook__knob {
+  .slider.is-scrubbing .slider__fill,
+  .slider.is-scrubbing .slider__knob {
     transition: none;
   }
 
-  .flipbook__count {
+  .slider__count {
     padding-top: var(--space-3);
     text-align: center;
     font-family: var(--font-mono, var(--font-body));
@@ -354,44 +240,28 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
 
 <script>
   document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll<HTMLElement>('[data-flipbook]').forEach((book) => {
-      const pageEls = [...book.querySelectorAll<HTMLElement>('.flipbook__page')];
+    document.querySelectorAll<HTMLElement>('[data-slider-book]').forEach((book) => {
+      const pageEls = [...book.querySelectorAll<HTMLElement>('.slider__page')];
       const numPages = Number(book.dataset.numPages);
       const maxPage = numPages - 1;
 
       const label = book.querySelector<HTMLElement>('[data-count-label]');
       const fill = book.querySelector<HTMLElement>('[data-fill]');
       const knob = book.querySelector<HTMLElement>('[data-knob]');
-      const slider = book.querySelector<HTMLElement>('[data-slider]');
+      const track = book.querySelector<HTMLElement>('[data-track]');
       const prevBtns = [...book.querySelectorAll<HTMLButtonElement>('[data-prev]')];
       const nextBtns = [...book.querySelectorAll<HTMLButtonElement>('[data-next]')];
 
       let current = 0;
-      let turning: { el: HTMLElement; rightHalf: HTMLElement; target: number } | null = null;
 
-      const setZ = () => {
+      const show = (index: number) => {
         pageEls.forEach((el, i) => {
-          el.style.zIndex = i < current ? '0' : String(numPages - i);
-        });
-      };
-
-      const settle = () => {
-        pageEls.forEach((el, i) => {
-          const right = el.querySelector<HTMLElement>('.flipbook__half--right')!;
-          const left = el.querySelector<HTMLElement>('.flipbook__half--left')!;
-          if (i < current) {
-            right.style.transform = 'rotateY(-180deg)';
-            left.style.visibility = 'hidden';
-          } else {
-            right.style.transform = 'rotateY(0deg)';
-            left.style.visibility = '';
-          }
-          if (Math.abs(i - current) <= 1) {
+          el.classList.toggle('is-active', i === index);
+          if (Math.abs(i - index) <= 1) {
             el.querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
               .forEach((img) => { img.loading = 'eager'; });
           }
         });
-        setZ();
       };
 
       const paintChrome = (shown: number) => {
@@ -399,68 +269,20 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
         const pct = maxPage > 0 ? (shown / maxPage) * 100 : 0;
         if (fill) fill.style.width = `${pct}%`;
         if (knob) knob.style.left = `${pct}%`;
-        slider?.setAttribute('aria-valuenow', String(shown + 1));
+        track?.setAttribute('aria-valuenow', String(shown + 1));
         prevBtns.forEach((b) => { b.disabled = shown === 0; });
         nextBtns.forEach((b) => { b.disabled = shown >= maxPage; });
       };
 
-      const finishTurn = () => {
-        if (!turning) return;
-        const { el, target } = turning;
-        current = target;
-        turning = null;
-        settle();
-        el.classList.remove('is-folding-forward', 'is-folding-back');
+      const goTo = (target: number) => {
+        const next = Math.max(0, Math.min(target, maxPage));
+        if (next === current) return;
+        current = next;
+        show(current);
         paintChrome(current);
       };
 
-      const flipTo = (target: number, animate: boolean) => {
-        const next = Math.max(0, Math.min(target, maxPage));
-        finishTurn();
-        if (next === current) return;
-
-        if (!animate || Math.abs(next - current) !== 1) {
-          current = next;
-          settle();
-          paintChrome(current);
-          return;
-        }
-
-        const forward = next > current;
-        const idx = forward ? current : current - 1;
-        const el = pageEls[idx];
-        const rightHalf = el.querySelector<HTMLElement>('.flipbook__half--right')!;
-        const leftHalf = el.querySelector<HTMLElement>('.flipbook__half--left')!;
-
-        el.style.zIndex = String(numPages + 1);
-        rightHalf.style.transform = '';
-
-        if (forward) {
-          leftHalf.style.visibility = 'hidden';
-        } else {
-          leftHalf.style.visibility = '';
-        }
-
-        el.classList.add(forward ? 'is-folding-forward' : 'is-folding-back');
-        turning = { el, rightHalf, target: next };
-        paintChrome(next);
-
-        if (idx + 1 < numPages) {
-          pageEls[idx + 1].querySelectorAll<HTMLImageElement>('img[loading="lazy"]')
-            .forEach((img) => { img.loading = 'eager'; });
-        }
-
-        const ref = turning;
-        rightHalf.onanimationend = (e: AnimationEvent) => {
-          if (e.target !== rightHalf) return;
-          if (turning === ref) finishTurn();
-        };
-        setTimeout(() => { if (turning === ref) finishTurn(); }, 900);
-      };
-
-      const step = (d: number) => {
-        flipTo((turning ? turning.target : current) + d, true);
-      };
+      const step = (d: number) => goTo(current + d);
 
       prevBtns.forEach((b) => b.addEventListener('click', () => step(-1)));
       nextBtns.forEach((b) => b.addEventListener('click', () => step(1)));
@@ -468,32 +290,32 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
       book.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
         if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
-        if (e.key === 'Home') { e.preventDefault(); flipTo(0, false); }
-        if (e.key === 'End') { e.preventDefault(); flipTo(maxPage, false); }
+        if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+        if (e.key === 'End') { e.preventDefault(); goTo(maxPage); }
       });
 
-      if (slider) {
+      if (track) {
         const posAt = (cx: number) => {
-          const r = slider.getBoundingClientRect();
+          const r = track.getBoundingClientRect();
           const t = Math.max(0, Math.min((cx - r.left) / r.width, 1));
           return Math.round(t * maxPage);
         };
         let scrubbing = false;
-        slider.addEventListener('pointerdown', (e: PointerEvent) => {
+        track.addEventListener('pointerdown', (e: PointerEvent) => {
           scrubbing = true;
           book.classList.add('is-scrubbing');
-          slider.setPointerCapture(e.pointerId);
-          flipTo(posAt(e.clientX), false);
+          track.setPointerCapture(e.pointerId);
+          goTo(posAt(e.clientX));
         });
-        slider.addEventListener('pointermove', (e: PointerEvent) => {
-          if (scrubbing) flipTo(posAt(e.clientX), false);
+        track.addEventListener('pointermove', (e: PointerEvent) => {
+          if (scrubbing) goTo(posAt(e.clientX));
         });
         const stop = () => {
           scrubbing = false;
           book.classList.remove('is-scrubbing');
         };
-        slider.addEventListener('pointerup', stop);
-        slider.addEventListener('pointercancel', stop);
+        track.addEventListener('pointerup', stop);
+        track.addEventListener('pointercancel', stop);
       }
 
       let sx = 0, sy = 0;
@@ -507,7 +329,7 @@ const pageAR = pages[0]?.src ? pages[0].src.width / pages[0].src.height : 1.414;
         if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
       }, { passive: true });
 
-      settle();
+      show(current);
       paintChrome(current);
     });
   });
