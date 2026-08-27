@@ -173,6 +173,12 @@ const email = 'vanessatamvt@gmail.com';
     }
   }
 
+  document.addEventListener('astro:before-swap', (e) => {
+    if (sessionStorage.getItem('menuNav') && e.viewTransition) {
+      e.viewTransition.skipTransition();
+    }
+  });
+
   document.addEventListener('astro:after-swap', () => {
     if (sessionStorage.getItem('menuNav')) {
       const overlay = document.getElementById('menu-overlay');
