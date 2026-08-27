@@ -159,6 +159,8 @@ const { projects } = Astro.props;
     const getActiveIndex = () => {
       const { width, gap } = getCardMetrics();
       if (!width) return 0;
+      const maxScroll = rail.scrollWidth - rail.clientWidth;
+      if (maxScroll > 0 && rail.scrollLeft >= maxScroll - 10) return cards.length - 1;
       return Math.round(rail.scrollLeft / (width + gap));
     };
 
