@@ -157,11 +157,10 @@ const { projects } = Astro.props;
     };
 
     const getActiveIndex = () => {
-      const { width, gap } = getCardMetrics();
-      if (!width) return 0;
       const maxScroll = rail.scrollWidth - rail.clientWidth;
-      if (maxScroll > 0 && rail.scrollLeft >= maxScroll - 10) return cards.length - 1;
-      return Math.round(rail.scrollLeft / (width + gap));
+      if (maxScroll <= 0) return 0;
+      const progress = rail.scrollLeft / maxScroll;
+      return Math.round(progress * (cards.length - 1));
     };
 
     const updateControls = () => {
@@ -178,9 +177,9 @@ const { projects } = Astro.props;
     };
 
     const scrollToCard = (index: number) => {
-      const { width, gap } = getCardMetrics();
-      if (!width) return;
-      rail.scrollTo({ left: index * (width + gap), behavior: 'smooth' });
+      const maxScroll = rail.scrollWidth - rail.clientWidth;
+      if (maxScroll <= 0) return;
+      rail.scrollTo({ left: (index / (cards.length - 1)) * maxScroll, behavior: 'smooth' });
     };
 
     prevArrow?.addEventListener('click', () => scrollByCard(-1));
