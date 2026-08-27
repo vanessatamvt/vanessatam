@@ -126,13 +126,6 @@ const heroSizes = heroContain ? `min(100vw, ${pageHeroImage.width}px)` : '100vw'
     <div class="project-sections">
       {
         sections.map((section) =>
-          section.pdf ? (
-            <section class="pdf-embed">
-              <div class="container">
-                <iframe src={section.pdf} class="pdf-embed__viewer" title="Project presentation" />
-              </div>
-            </section>
-          ) :
           section.flipbook && section.flipbook.length > 0 ? (
             <PageFlipbook pages={section.flipbook} title={section.flipbookTitle} />
           ) : (
@@ -277,15 +270,6 @@ const heroSizes = heroContain ? `min(100vw, ${pageHeroImage.width}px)` : '100vw'
     padding-bottom: var(--space-16);
   }
 
-  .pdf-embed {
-    padding-block: var(--space-8);
-  }
-
-  .pdf-embed__viewer {
-    width: 100%;
-    aspect-ratio: 1 / 1.414;
-    border: 1px solid var(--color-hairline);
-  }
 
   /* Breathing room between the last carousel and the closing image, so the
      finale reads as its own beat rather than trailing the reel. */
