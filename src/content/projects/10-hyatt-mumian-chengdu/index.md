@@ -15,7 +15,7 @@ facts:
   gfa: "35,000 sqm"
   program: "Hotel rooms and amenities"
   responsibilities: "Design Development, Pre-Construction Documentation, Owner's Meetings, Translation"
-imageCredit: "Images Courtesy to Alberto Cipriani, RAD Ltd, Photographers Wang Ting and Qiu Xin. This project has been completed under a team of designers, including but not limited to Cheng Chung Design (HK)."
+imageCredit: "Images Courtesy to Alberto Cipriani, RAD Ltd, Photographers Wang Ting and Qiu Xin.\nThis project has been completed under a team of designers, including but not limited to Cheng Chung Design (HK)."
 heroImage: ./hero.jpg
 heroCaption: "Hotel exterior at dusk, with the podium restaurant pavilions lit beneath the MUMIAN-branded tower"
 
