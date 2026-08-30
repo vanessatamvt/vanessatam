@@ -15,7 +15,7 @@ facts:
   gfa: "38,000 sqm"
   program: "Hotel rooms and amenities"
   responsibilities: "Conceptual presentation, Graphical Production, Modelling and Rendering, Physical Model, Owner's Meetings"
-imageCredit: "Images Courtesy of RAD Ltd.\nModel was built by Vanessa Tam while employed at RAD Ltd."
+imageCredit: "Model was built by Vanessa Tam while employed at RAD Ltd."
 # Home-page card only — cropped to the tall red-box framing so the tower fills
 # the portrait card instead of being centre-cropped out of a wide photo.
 heroImage: ./hero.jpg
