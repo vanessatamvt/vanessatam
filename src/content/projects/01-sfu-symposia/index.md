@@ -21,7 +21,7 @@ facts:
     - "Coordinated envelope details and material colors and interfacing"
     - "Managed CA site reviews for life-safety and occupancy"
     - "Reviewed shop drawings and issued site instructions per client's requests"
-imageCredit: "Renderings courtesy to Mosaic Homes and RWA Group Architecture. Site images taken by Vanessa Tam while employed at RWA Group Architecture."
+imageCredit: "Renderings courtesy to Mosaic Homes and RWA Group Architecture.\nSite images taken by Vanessa Tam while employed at RWA Group Architecture."
 heroImage: ./hero.jpg
 # Anchor the cropped project-page hero to the image's bottom edge so the
 # street level (shops, trees) stays visible; the extra sky at top is trimmed.
