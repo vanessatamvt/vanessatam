@@ -30,6 +30,8 @@ sections:
     leadText: true
     text: "After centuries of agricultural and industrial expansion in the Po Valley, we investigate the history, culture, and existing conditions of the Basin, and in turn, present a collection of nature-based solutions in varying scales to establish ecological connections and transition towards sustainable and resilient land use."
 
+  - text: "A Brief Read Below:"
+
   - flipbook:
       - src: ./slide-01.png
       - src: ./slide-02.png
