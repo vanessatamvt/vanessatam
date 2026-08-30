@@ -35,15 +35,13 @@ detailHeroImage: ./detail-hero.jpg
 galleryTitle: "Study Models"
 buildingGallery:
   - src: ./study-01-site-massing.jpg
-    caption: "Overhead view of the site: contoured base, surrounding context blocks, and the hotel volume in coloured programme blocks"
+    caption: "A pool on the beach and amenities on the podium with public road access"
   - src: ./study-02-coloured-programme.jpg
-    caption: "Programme massing in colour, with the louvred screen wall and the neighbouring tower in context"
+    caption: "2-storey podium and the hotel tower"
   - src: ./study-03-facade-module.jpg
-    caption: "Facade study: the balcony module repeated across the slab, seen in raking light"
+    caption: "Facade study: hotel rooms with varying angles towards the 180 deg sea view"
   - src: ./study-04-facade-frontal.jpg
-    caption: "The facade grid seen frontally, sitting on its podium above the contoured site"
-  - src: ./study-05-podium-plate.jpg
-    caption: "Podium and site plate in white against the cut cardboard landscape"
+    caption: "View of the hotel from the sea"
 
 # Carousel 2 — the finished presentation model, Nov 2017. Three landscape shots
 # plus one portrait (the overhead site plate), so the slides size to their own
