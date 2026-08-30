@@ -22,7 +22,7 @@ facts:
     - "Detail coordination with trades and consultants for detail designs, such as facade and balcony design, tower light troughs, vertical green walls, indoor pool waterproof detailing, and courtyard exit stair clearances"
     - "Prepared design package for government submission on the landscape footbridge connecting to the public landscape deck"
     - "Reviewed shop drawings and issued site instructions per client's requests"
-imageCredit: "Images Courtesy of Ronald Lu & Partners; Marble Edge Investments Ltd. Some images were taken by Vanessa Tam and colleagues on site visits while employed under RLP."
+imageCredit: "Images Courtesy of Ronald Lu & Partners; Marble Edge Investments Ltd.\nSome images were taken by Vanessa Tam and colleagues on site visits while employed under RLP."
 heroImage: ./hero.jpeg
 heroCaption: "Sea-facing elevation design rendering"
 # Project-page banner only (home page card keeps heroImage). Photo of the

@@ -19,7 +19,7 @@ facts:
   responsibilityDetails:
     - "Managed CA site reviews for firestop and insulation in units and common areas"
     - "Coordinated with Canada Post for mailbox delivery compliance"
-imageCredit: "Images Courtesy of RWA Group Architecture. Some images were taken by Vanessa Tam and colleagues on site visits while employed under RWA."
+imageCredit: "Images Courtesy of RWA Group Architecture.\nSome images were taken by Vanessa Tam and colleagues on site visits while employed under RWA."
 heroImage: ./hero.jpg
 # Project-page banner only (home page card keeps heroImage). Construction
 # photo with the building's verticals straightened to align with the frame.
