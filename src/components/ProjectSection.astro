@@ -572,7 +572,12 @@ const videoId = youtubeId(video);
     cursor: zoom-in;
   }
 
-  .project-section__figure figcaption,
+  .project-section__figure figcaption {
+    padding-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
+
   /* --- Image beside text -------------------------------------------------
      A third for the drawing, two thirds for the paragraph that introduces it.
      The image column is fixed by fraction (not by aspect ratio like the 2-up
