@@ -126,7 +126,6 @@ CERTIFICATIONS = [
     ("2024", "Architect — Architects Registration Board (ARB), UK", "Reg. 112155C"),
     ("2023", "Advanced Diploma in Professional Practice in Architecture (RIBA Part 3)",
      "Royal Institute of British Architects"),
-    ("2023", "LEED Green Associate", "Green Business Certification Inc."),
     ("2021", "Autodesk Certified Professional — Revit for BIM", "Autodesk"),
     ("2021", "V-Ray for Revit Professional Certificate", "Chaos"),
     ("2020", "Introductory Certificate in Project Management", "IPMA"),
